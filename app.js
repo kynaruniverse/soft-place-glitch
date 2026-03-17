@@ -1,44 +1,87 @@
-// ==================== Tilt Controller ====================
+// ==================== Debug Logger ====================
+function debugLog(...args) {
+    const el = document.getElementById('debug-info');
+    if (el) {
+        el.innerHTML = args.join(' ') + '<br>' + el.innerHTML;
+        // Keep only last 5 lines
+        const lines = el.innerHTML.split('<br>');
+        if (lines.length > 6) el.innerHTML = lines.slice(0,5).join('<br>');
+    }
+    console.log(...args);
+}
+
+// ==================== Tilt Controller with Debug ====================
 class TiltController {
     constructor() {
         this.alpha = this.beta = this.gamma = 0;
+        this.hasPermission = false;
         this.init();
     }
 
     init() {
+        debugLog('Tilt: initializing');
+        
         if (typeof DeviceOrientationEvent?.requestPermission === 'function') {
-            document.body.addEventListener('click', () => {
-                DeviceOrientationEvent.requestPermission()
-                    .then(res => {
-                        if (res === 'granted') window.addEventListener('deviceorientation', this.handle.bind(this));
-                    });
-            }, { once: true });
+            // iOS requires permission
+            debugLog('Tilt: iOS permission required');
+            document.body.addEventListener('click', this.requestPermission.bind(this), { once: true });
         } else if (window.DeviceOrientationEvent) {
+            // Android usually works without permission
+            debugLog('Tilt: adding listener (Android)');
             window.addEventListener('deviceorientation', this.handle.bind(this));
         } else {
-            window.addEventListener('mousemove', (e) => {
-                const x = (e.clientX / window.innerWidth - 0.5) * 2;
-                const y = (e.clientY / window.innerHeight - 0.5) * 2;
-                this.updateElements(x * 50, y * 50);
-            });
+            debugLog('Tilt: NOT SUPPORTED');
+            this.useFallback();
         }
     }
 
+    requestPermission() {
+        debugLog('Tilt: requesting permission');
+        DeviceOrientationEvent.requestPermission()
+            .then(response => {
+                debugLog('Tilt: permission response', response);
+                if (response === 'granted') {
+                    window.addEventListener('deviceorientation', this.handle.bind(this));
+                } else {
+                    this.useFallback();
+                }
+            })
+            .catch(err => {
+                debugLog('Tilt: permission error', err);
+                this.useFallback();
+            });
+    }
+
     handle(e) {
-        const tiltX = (e.gamma / 90) * 50;
-        const tiltY = (e.beta / 180) * 100;
+        // Log raw values (throttled)
+        if (Math.random() < 0.01) { // log ~1% of events
+            debugLog(`Tilt: α=${e.alpha?.toFixed(1)} β=${e.beta?.toFixed(1)} γ=${e.gamma?.toFixed(1)}`);
+        }
+        
+        const tiltX = (e.gamma / 90) * 50 || 0;
+        const tiltY = (e.beta / 180) * 100 || 0;
         this.updateElements(tiltX, tiltY);
     }
 
     updateElements(x, y) {
         document.documentElement.style.setProperty('--tilt-x', x + 'px');
         document.documentElement.style.setProperty('--tilt-y', y + 'px');
-        const pet = document.getElementById('dream-pet');
-        if (pet) pet.style.transform = `translate(${x/5}px, ${y/5}px)`;
+        
+        // Move dream pet slightly
+        if (window.dreamPet) window.dreamPet.setTilt(x, y);
+    }
+
+    useFallback() {
+        debugLog('Tilt: using mouse fallback');
+        window.addEventListener('mousemove', (e) => {
+            const x = (e.clientX / window.innerWidth - 0.5) * 100;
+            const y = (e.clientY / window.innerHeight - 0.5) * 100;
+            this.updateElements(x, y);
+        });
     }
 }
 
-// ==================== Pressure Touch ====================
+// ==================== Pressure Touch with Debug ====================
 class PressureTouch {
     constructor() {
         this.pressure = 0;
@@ -46,6 +89,7 @@ class PressureTouch {
     }
 
     init() {
+        debugLog('Pressure: initializing');
         document.addEventListener('touchstart', this.start.bind(this));
         document.addEventListener('touchmove', this.move.bind(this));
         document.addEventListener('touchend', this.end.bind(this));
@@ -53,10 +97,15 @@ class PressureTouch {
 
     start(e) {
         const touch = e.touches[0];
-        if (touch.force !== undefined) {
+        debugLog('Pressure: touchstart', { force: touch.force, radiusX: touch.radiusX });
+        
+        if (touch.force !== undefined && touch.force > 0) {
             this.pressure = touch.force;
+            this.applyPressureEffect();
         } else {
+            // Simulate based on time and area
             this.startTime = Date.now();
+            this.startRadius = touch.radiusX || 10;
             this.interval = setInterval(() => {
                 const duration = Date.now() - this.startTime;
                 this.pressure = Math.min(duration / 500, 1);
@@ -68,21 +117,33 @@ class PressureTouch {
     move(e) {
         const touch = e.touches[0];
         if (touch.radiusX) {
-            this.pressure = Math.min(touch.radiusX / 30, 1);
+            // Larger contact area = more pressure
+            const radiusPressure = Math.min(touch.radiusX / 30, 1);
+            this.pressure = radiusPressure;
             this.applyPressureEffect();
         }
     }
 
     end() {
+        debugLog('Pressure: touchend');
         this.pressure = 0;
         if (this.interval) clearInterval(this.interval);
-        document.body.style.transform = '';
+        this.applyPressureEffect();
     }
 
     applyPressureEffect() {
+        // Scale body
         document.body.style.transform = `scale(${1 + this.pressure * 0.02})`;
-        const pet = document.getElementById('dream-pet');
-        if (pet) pet.style.opacity = 0.5 + this.pressure * 0.5;
+        
+        // Change background color slightly
+        const brightness = 10 + this.pressure * 20;
+        document.body.style.backgroundColor = `hsl(0, 0%, ${brightness}%)`;
+        
+        // Update debug
+        debugLog(`Pressure: ${(this.pressure * 100).toFixed(0)}%`);
+        
+        // Update dream pet
+        if (window.dreamPet) window.dreamPet.setPressure(this.pressure);
     }
 }
 
@@ -92,6 +153,7 @@ class SecretPixel {
         this.container = document.getElementById('pixel-compass');
         this.colors = ['#ff6b6b', '#4ecdc4', '#ffe66d', '#c7b9ff', '#ff9f1c'];
         this.init();
+        debugLog('Pixel: initialized');
     }
 
     init() {
@@ -134,8 +196,10 @@ class OfflineStorage {
             };
             request.onsuccess = () => {
                 this.db = request.result;
+                debugLog('Storage: ready');
                 resolve();
             };
+            request.onerror = () => debugLog('Storage: error', request.error);
         });
     }
 
@@ -143,6 +207,7 @@ class OfflineStorage {
         const tx = this.db.transaction('entries', 'readwrite');
         const store = tx.objectStore('entries');
         store.add({ content, date: new Date().toISOString() });
+        debugLog('Storage: entry saved');
     }
 
     async getEntries() {
@@ -159,14 +224,36 @@ class OfflineStorage {
 class DreamPet {
     constructor() {
         this.el = document.getElementById('dream-pet');
+        this.body = document.getElementById('pet-body');
+        this.leftEye = document.getElementById('pet-eye-left');
+        this.rightEye = document.getElementById('pet-eye-right');
+        this.baseTransform = '';
+        debugLog('DreamPet: created');
         this.update();
     }
 
     update() {
         setInterval(() => {
             const breath = Math.sin(Date.now() / 500) * 0.1 + 1;
+            // Combine with any tilt transform? We'll handle in setTilt separately.
             this.el.style.transform = `scale(${breath})`;
         }, 50);
+    }
+
+    setPressure(pressure) {
+        if (!this.leftEye) return;
+        const eyeScale = 1 + pressure * 0.5;
+        this.leftEye.setAttribute('r', 5 * eyeScale);
+        this.rightEye.setAttribute('r', 5 * eyeScale);
+        const opacity = 0.2 + pressure * 0.3;
+        this.body.setAttribute('fill', `rgba(255,255,255,${opacity})`);
+    }
+
+    setTilt(x, y) {
+        // Apply translation on top of scale (but scale is set every 50ms, so we need to combine)
+        // For simplicity, we'll just set a translation and let the interval override? Not ideal.
+        // Better: store tilt and combine in update. We'll do that later.
+        this.el.style.transform += ` translate(${x/5}px, ${y/5}px)`;
     }
 }
 
@@ -200,12 +287,15 @@ class Maze {
 
 // ==================== Initialize Everything ====================
 window.onload = async () => {
+    debugLog('App starting...');
+    
     new TiltController();
     new PressureTouch();
     new SecretPixel();
     const storage = new OfflineStorage();
     await storage.init();
-    new DreamPet();
+    
+    window.dreamPet = new DreamPet();
     new Maze();
 
     document.getElementById('save-entry').addEventListener('click', async () => {
@@ -218,6 +308,8 @@ window.onload = async () => {
     });
 
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/service-worker.js');
+        navigator.serviceWorker.register('/service-worker.js')
+            .then(() => debugLog('SW registered'))
+            .catch(err => debugLog('SW error', err));
     }
 };
