@@ -1,4 +1,4 @@
-const CACHE = 'soft-place-v1';
+const CACHE = 'soft-place-v2';
 const urlsToCache = [
     './',
     './index.html',
