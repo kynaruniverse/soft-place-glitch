@@ -1,315 +1,485 @@
-// ==================== Debug Logger ====================
-function debugLog(...args) {
-    const el = document.getElementById('debug-info');
-    if (el) {
-        el.innerHTML = args.join(' ') + '<br>' + el.innerHTML;
-        // Keep only last 5 lines
-        const lines = el.innerHTML.split('<br>');
-        if (lines.length > 6) el.innerHTML = lines.slice(0,5).join('<br>');
-    }
-    console.log(...args);
+// ==================== Core App State ====================
+const STORE_NAME = 'widgets';
+const DB_NAME = 'SoftPlace2035';
+const DB_VERSION = 1;
+
+let db;
+let currentTab = 'notes';
+let widgets = [];
+let smartEnabled = false;
+
+// DOM elements
+const appEl = document.getElementById('app');
+const tabBar = document.getElementById('tab-bar');
+const tabContent = document.getElementById('tab-content');
+const cmdButton = document.getElementById('cmd-button');
+const cmdPalette = document.getElementById('command-palette');
+const cmdInput = document.getElementById('command-input');
+const cmdResults = document.getElementById('command-results');
+const smartToggle = document.getElementById('smart-toggle');
+const modalOverlay = document.getElementById('modal-overlay');
+const modalTitle = document.getElementById('modal-title');
+const modalContent = document.getElementById('modal-content');
+const modalCancel = document.getElementById('modal-cancel');
+const modalOk = document.getElementById('modal-ok');
+
+// ==================== IndexedDB Initialization ====================
+function initDB() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+            db = request.result;
+            resolve();
+        };
+        request.onupgradeneeded = (e) => {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains(STORE_NAME)) {
+                db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
+            }
+        };
+    });
 }
 
-// ==================== Tilt Controller with Debug ====================
-class TiltController {
-    constructor() {
-        this.alpha = this.beta = this.gamma = 0;
-        this.hasPermission = false;
-        this.init();
-    }
+// ==================== Widget CRUD ====================
+async function loadWidgets() {
+    return new Promise((resolve) => {
+        const tx = db.transaction(STORE_NAME, 'readonly');
+        const store = tx.objectStore(STORE_NAME);
+        const request = store.getAll();
+        request.onsuccess = () => {
+            widgets = request.result || [];
+            resolve(widgets);
+        };
+    });
+}
 
-    init() {
-        debugLog('Tilt: initializing');
-        
-        if (typeof DeviceOrientationEvent?.requestPermission === 'function') {
-            // iOS requires permission
-            debugLog('Tilt: iOS permission required');
-            document.body.addEventListener('click', this.requestPermission.bind(this), { once: true });
-        } else if (window.DeviceOrientationEvent) {
-            // Android usually works without permission
-            debugLog('Tilt: adding listener (Android)');
-            window.addEventListener('deviceorientation', this.handle.bind(this));
-        } else {
-            debugLog('Tilt: NOT SUPPORTED');
-            this.useFallback();
-        }
+async function saveWidget(widget) {
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    const store = tx.objectStore(STORE_NAME);
+    if (widget.id) {
+        store.put(widget);
+    } else {
+        store.add(widget);
     }
+    await loadWidgets();
+    render();
+}
 
-    requestPermission() {
-        debugLog('Tilt: requesting permission');
-        DeviceOrientationEvent.requestPermission()
-            .then(response => {
-                debugLog('Tilt: permission response', response);
-                if (response === 'granted') {
-                    window.addEventListener('deviceorientation', this.handle.bind(this));
-                } else {
-                    this.useFallback();
-                }
-            })
-            .catch(err => {
-                debugLog('Tilt: permission error', err);
-                this.useFallback();
-            });
+async function deleteWidget(id) {
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    const store = tx.objectStore(STORE_NAME);
+    store.delete(id);
+    await loadWidgets();
+    render();
+}
+
+// ==================== Render Tabs and Widgets ====================
+const tabs = [
+    { id: 'notes', label: 'Notes', icon: '📝' },
+    { id: 'code', label: 'Code', icon: '</>' },
+    { id: 'links', label: 'Links', icon: '🔗' },
+    { id: 'stickies', label: 'Sticky', icon: '📌' }
+];
+
+function renderTabs() {
+    tabBar.innerHTML = '';
+    tabs.forEach(tab => {
+        const btn = document.createElement('button');
+        btn.className = `tab ${currentTab === tab.id ? 'active' : ''}`;
+        btn.dataset.tab = tab.id;
+        btn.textContent = `${tab.icon} ${tab.label}`;
+        btn.addEventListener('click', () => {
+            currentTab = tab.id;
+            renderTabs();
+            render();
+        });
+        tabBar.appendChild(btn);
+    });
+}
+
+function render() {
+    const filtered = widgets.filter(w => w.type === currentTab.slice(0, -1) || (currentTab === 'stickies' && w.type === 'sticky'));
+    // Apply smart sorting if enabled
+    let sorted = filtered;
+    if (smartEnabled) {
+        sorted = smartSort(filtered);
     }
+    tabContent.innerHTML = `<div class="widget-grid">${
+        sorted.map(w => renderWidgetCard(w)).join('')
+    }</div>`;
+}
 
-    handle(e) {
-        // Log raw values (throttled)
-        if (Math.random() < 0.01) { // log ~1% of events
-            debugLog(`Tilt: α=${e.alpha?.toFixed(1)} β=${e.beta?.toFixed(1)} γ=${e.gamma?.toFixed(1)}`);
-        }
-        
-        const tiltX = (e.gamma / 90) * 50 || 0;
-        const tiltY = (e.beta / 180) * 100 || 0;
-        this.updateElements(tiltX, tiltY);
+function renderWidgetCard(w) {
+    let contentHtml = '';
+    switch (w.type) {
+        case 'note':
+            contentHtml = `<div class="widget-content">${escapeHTML(w.content.substring(0, 200))}${w.content.length > 200 ? '…' : ''}</div>`;
+            break;
+        case 'code':
+            contentHtml = `<pre class="widget-code"><code>${escapeHTML(w.code.substring(0, 150))}${w.code.length > 150 ? '…' : ''}</code></pre>`;
+            break;
+        case 'link':
+            contentHtml = `<a href="${escapeHTML(w.url)}" target="_blank" class="widget-link">${escapeHTML(w.title || w.url)}</a>`;
+            break;
+        case 'sticky':
+            contentHtml = `<div class="widget-content" style="background:${w.color || '#2a2f33'}; padding:12px; border-radius:12px;">${escapeHTML(w.text)}</div>`;
+            break;
     }
+    return `
+        <div class="widget-card" data-id="${w.id}" data-type="${w.type}">
+            <div class="widget-header">
+                <span>${w.type}</span>
+                <span>${new Date(w.created || Date.now()).toLocaleDateString()}</span>
+            </div>
+            <div class="widget-title">${escapeHTML(w.title || 'Untitled')}</div>
+            ${contentHtml}
+            <div class="widget-footer">
+                <button class="edit-widget" data-id="${w.id}">✎</button>
+                <button class="delete-widget" data-id="${w.id}">✕</button>
+            </div>
+        </div>
+    `;
+}
 
-    updateElements(x, y) {
-        document.documentElement.style.setProperty('--tilt-x', x + 'px');
-        document.documentElement.style.setProperty('--tilt-y', y + 'px');
-        
-        // Move dream pet slightly
-        if (window.dreamPet) window.dreamPet.setTilt(x, y);
-    }
+function escapeHTML(str) {
+    return String(str).replace(/[&<>"]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        if (m === '"') return '&quot;';
+        return m;
+    });
+}
 
-    useFallback() {
-        debugLog('Tilt: using mouse fallback');
-        window.addEventListener('mousemove', (e) => {
-            const x = (e.clientX / window.innerWidth - 0.5) * 100;
-            const y = (e.clientY / window.innerHeight - 0.5) * 100;
-            this.updateElements(x, y);
+// ==================== Smart Sorting ====================
+function smartSort(widgets) {
+    const hour = new Date().getHours();
+    // Morning (5-11): notes first, then stickies
+    // Afternoon (12-17): links first
+    // Evening (18-4): code first
+    if (hour >= 5 && hour < 12) {
+        return widgets.sort((a,b) => {
+            if (a.type === 'note') return -1;
+            if (b.type === 'note') return 1;
+            if (a.type === 'sticky') return -1;
+            if (b.type === 'sticky') return 1;
+            return 0;
+        });
+    } else if (hour >= 12 && hour < 18) {
+        return widgets.sort((a,b) => {
+            if (a.type === 'link') return -1;
+            if (b.type === 'link') return 1;
+            return 0;
+        });
+    } else {
+        return widgets.sort((a,b) => {
+            if (a.type === 'code') return -1;
+            if (b.type === 'code') return 1;
+            return 0;
         });
     }
 }
 
-// ==================== Pressure Touch with Debug ====================
-class PressureTouch {
-    constructor() {
-        this.pressure = 0;
-        this.init();
-    }
+// ==================== Command Palette ====================
+cmdButton.addEventListener('click', toggleCommandPalette);
+cmdInput.addEventListener('input', handleCommandInput);
+cmdInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') hideCommandPalette();
+    if (e.key === 'Enter') executeCommand(cmdInput.value);
+});
 
-    init() {
-        debugLog('Pressure: initializing');
-        document.addEventListener('touchstart', this.start.bind(this));
-        document.addEventListener('touchmove', this.move.bind(this));
-        document.addEventListener('touchend', this.end.bind(this));
-    }
-
-    start(e) {
-        const touch = e.touches[0];
-        debugLog('Pressure: touchstart', { force: touch.force, radiusX: touch.radiusX });
-        
-        if (touch.force !== undefined && touch.force > 0) {
-            this.pressure = touch.force;
-            this.applyPressureEffect();
-        } else {
-            // Simulate based on time and area
-            this.startTime = Date.now();
-            this.startRadius = touch.radiusX || 10;
-            this.interval = setInterval(() => {
-                const duration = Date.now() - this.startTime;
-                this.pressure = Math.min(duration / 500, 1);
-                this.applyPressureEffect();
-            }, 50);
-        }
-    }
-
-    move(e) {
-        const touch = e.touches[0];
-        if (touch.radiusX) {
-            // Larger contact area = more pressure
-            const radiusPressure = Math.min(touch.radiusX / 30, 1);
-            this.pressure = radiusPressure;
-            this.applyPressureEffect();
-        }
-    }
-
-    end() {
-        debugLog('Pressure: touchend');
-        this.pressure = 0;
-        if (this.interval) clearInterval(this.interval);
-        this.applyPressureEffect();
-    }
-
-    applyPressureEffect() {
-        // Scale body
-        document.body.style.transform = `scale(${1 + this.pressure * 0.02})`;
-        
-        // Change background color slightly
-        const brightness = 10 + this.pressure * 20;
-        document.body.style.backgroundColor = `hsl(0, 0%, ${brightness}%)`;
-        
-        // Update debug
-        debugLog(`Pressure: ${(this.pressure * 100).toFixed(0)}%`);
-        
-        // Update dream pet
-        if (window.dreamPet) window.dreamPet.setPressure(this.pressure);
+function toggleCommandPalette() {
+    cmdPalette.classList.toggle('hidden');
+    if (!cmdPalette.classList.contains('hidden')) {
+        cmdInput.focus();
     }
 }
 
-// ==================== Secret Pixel ====================
-class SecretPixel {
-    constructor() {
-        this.container = document.getElementById('pixel-compass');
-        this.colors = ['#ff6b6b', '#4ecdc4', '#ffe66d', '#c7b9ff', '#ff9f1c'];
-        this.init();
-        debugLog('Pixel: initialized');
-    }
-
-    init() {
-        this.createPixel();
-        setInterval(() => this.createPixel(), 30000);
-    }
-
-    createPixel() {
-        this.container.innerHTML = '';
-        const dot = document.createElement('div');
-        dot.style.cssText = `
-            width: 1px;
-            height: 1px;
-            background: ${this.colors[Math.floor(Math.random() * this.colors.length)]};
-            position: absolute;
-            left: ${Math.random() * 100}%;
-            top: ${Math.random() * 100}%;
-            transition: all 0.5s ease;
-            box-shadow: 0 0 2px currentColor;
-        `;
-        this.container.appendChild(dot);
-    }
+function hideCommandPalette() {
+    cmdPalette.classList.add('hidden');
+    cmdInput.value = '';
+    cmdResults.innerHTML = '';
 }
 
-// ==================== Offline Storage ====================
-class OfflineStorage {
-    constructor() {
-        this.dbName = 'SoftPlace';
-        this.init();
+function handleCommandInput() {
+    const text = cmdInput.value.trim();
+    if (!text) {
+        cmdResults.innerHTML = '';
+        return;
     }
-
-    init() {
-        return new Promise((resolve) => {
-            const request = indexedDB.open(this.dbName, 1);
-            request.onupgradeneeded = (e) => {
-                const db = e.target.result;
-                if (!db.objectStoreNames.contains('entries')) {
-                    db.createObjectStore('entries', { keyPath: 'id', autoIncrement: true });
-                }
-            };
-            request.onsuccess = () => {
-                this.db = request.result;
-                debugLog('Storage: ready');
-                resolve();
-            };
-            request.onerror = () => debugLog('Storage: error', request.error);
-        });
-    }
-
-    async saveEntry(content) {
-        const tx = this.db.transaction('entries', 'readwrite');
-        const store = tx.objectStore('entries');
-        store.add({ content, date: new Date().toISOString() });
-        debugLog('Storage: entry saved');
-    }
-
-    async getEntries() {
-        return new Promise((resolve) => {
-            const tx = this.db.transaction('entries', 'readonly');
-            const store = tx.objectStore('entries');
-            const request = store.getAll();
-            request.onsuccess = () => resolve(request.result);
-        });
-    }
-}
-
-// ==================== Dream Pet ====================
-class DreamPet {
-    constructor() {
-        this.el = document.getElementById('dream-pet');
-        this.body = document.getElementById('pet-body');
-        this.leftEye = document.getElementById('pet-eye-left');
-        this.rightEye = document.getElementById('pet-eye-right');
-        this.baseTransform = '';
-        debugLog('DreamPet: created');
-        this.update();
-    }
-
-    update() {
-        setInterval(() => {
-            const breath = Math.sin(Date.now() / 500) * 0.1 + 1;
-            // Combine with any tilt transform? We'll handle in setTilt separately.
-            this.el.style.transform = `scale(${breath})`;
-        }, 50);
-    }
-
-    setPressure(pressure) {
-        if (!this.leftEye) return;
-        const eyeScale = 1 + pressure * 0.5;
-        this.leftEye.setAttribute('r', 5 * eyeScale);
-        this.rightEye.setAttribute('r', 5 * eyeScale);
-        const opacity = 0.2 + pressure * 0.3;
-        this.body.setAttribute('fill', `rgba(255,255,255,${opacity})`);
-    }
-
-    setTilt(x, y) {
-        // Apply translation on top of scale (but scale is set every 50ms, so we need to combine)
-        // For simplicity, we'll just set a translation and let the interval override? Not ideal.
-        // Better: store tilt and combine in update. We'll do that later.
-        this.el.style.transform += ` translate(${x/5}px, ${y/5}px)`;
-    }
-}
-
-// ==================== Maze (Error State) ====================
-class Maze {
-    constructor() {
-        this.overlay = document.getElementById('maze-overlay');
-        this.initListeners();
-    }
-
-    initListeners() {
-        window.addEventListener('error', () => this.show());
-        document.addEventListener('click', (e) => {
-            if (e.target.tagName === 'A' && !e.target.href) {
-                e.preventDefault();
-                this.show();
+    // Show suggestions
+    const suggestions = [];
+    if (text.startsWith('note ')) {
+        suggestions.push({ text: `Create note: "${text.slice(5)}"`, action: () => createNote(text.slice(5)) });
+    } else if (text.startsWith('code ')) {
+        suggestions.push({ text: `Create code snippet: "${text.slice(5)}"`, action: () => createCode(text.slice(5)) });
+    } else if (text.startsWith('link ')) {
+        suggestions.push({ text: `Create link: "${text.slice(5)}"`, action: () => createLink(text.slice(5)) });
+    } else if (text.startsWith('sticky ')) {
+        suggestions.push({ text: `Create sticky: "${text.slice(7)}"`, action: () => createSticky(text.slice(7)) });
+    } else {
+        // Search existing
+        widgets.forEach(w => {
+            if (w.title && w.title.toLowerCase().includes(text.toLowerCase())) {
+                suggestions.push({ text: `📄 ${w.title} (${w.type})`, action: () => openWidget(w.id) });
             }
         });
     }
+    cmdResults.innerHTML = suggestions.map(s => `<div class="command-result-item">${escapeHTML(s.text)}</div>`).join('');
+    Array.from(document.querySelectorAll('.command-result-item')).forEach((el, i) => {
+        el.addEventListener('click', suggestions[i].action);
+    });
+}
 
-    show() {
-        this.overlay.style.display = 'block';
-        this.overlay.innerHTML = '<div style="color:white; text-align:center; margin-top:50vh;">🌀 lost? tap to return</div>';
-        this.overlay.onclick = () => this.hide();
-    }
+function executeCommand(text) {
+    handleCommandInput(); // triggers suggestions; we'll just pick first if any
+    const first = document.querySelector('.command-result-item');
+    if (first) first.click();
+    hideCommandPalette();
+}
 
-    hide() {
-        this.overlay.style.display = 'none';
+// Command actions
+function createNote(title) {
+    showModal('New Note', `
+        <input id="modal-note-title" placeholder="Title" value="${escapeHTML(title)}">
+        <textarea id="modal-note-content" placeholder="Note content"></textarea>
+    `, async () => {
+        const t = document.getElementById('modal-note-title').value;
+        const c = document.getElementById('modal-note-content').value;
+        if (t || c) {
+            await saveWidget({ type: 'note', title: t, content: c, created: Date.now() });
+        }
+    });
+}
+
+function createCode(title) {
+    showModal('New Code', `
+        <input id="modal-code-title" placeholder="Title" value="${escapeHTML(title)}">
+        <textarea id="modal-code-content" placeholder="Code"></textarea>
+        <select id="modal-code-lang">
+            <option>javascript</option><option>python</option><option>html</option><option>css</option>
+        </select>
+    `, async () => {
+        const t = document.getElementById('modal-code-title').value;
+        const c = document.getElementById('modal-code-content').value;
+        const l = document.getElementById('modal-code-lang').value;
+        await saveWidget({ type: 'code', title: t, code: c, language: l, created: Date.now() });
+    });
+}
+
+function createLink(url) {
+    showModal('New Link', `
+        <input id="modal-link-url" placeholder="URL" value="${escapeHTML(url)}">
+        <input id="modal-link-title" placeholder="Title (optional)">
+    `, async () => {
+        const u = document.getElementById('modal-link-url').value;
+        const t = document.getElementById('modal-link-title').value;
+        if (u) {
+            await saveWidget({ type: 'link', url: u, title: t, created: Date.now() });
+        }
+    });
+}
+
+function createSticky(text) {
+    showModal('New Sticky', `
+        <textarea id="modal-sticky-text" placeholder="Sticky note">${escapeHTML(text)}</textarea>
+        <input id="modal-sticky-color" type="color" value="#2a5f3a">
+    `, async () => {
+        const txt = document.getElementById('modal-sticky-text').value;
+        const col = document.getElementById('modal-sticky-color').value;
+        if (txt) {
+            await saveWidget({ type: 'sticky', text: txt, color: col, created: Date.now() });
+        }
+    });
+}
+
+function openWidget(id) {
+    // Switch to appropriate tab and scroll to widget
+    const widget = widgets.find(w => w.id === id);
+    if (widget) {
+        currentTab = widget.type + 's'; // notes, code, links, stickies
+        renderTabs();
+        render();
+        // Scroll into view after render
+        setTimeout(() => {
+            const el = document.querySelector(`.widget-card[data-id="${id}"]`);
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 100);
     }
 }
 
-// ==================== Initialize Everything ====================
-window.onload = async () => {
-    debugLog('App starting...');
-    
-    new TiltController();
-    new PressureTouch();
-    new SecretPixel();
-    const storage = new OfflineStorage();
-    await storage.init();
-    
-    window.dreamPet = new DreamPet();
-    new Maze();
+// ==================== Modal ====================
+function showModal(title, contentHtml, onOK) {
+    modalTitle.textContent = title;
+    modalContent.innerHTML = contentHtml;
+    modalOverlay.classList.remove('hidden');
+    modalOk.onclick = () => {
+        onOK();
+        modalOverlay.classList.add('hidden');
+    };
+    modalCancel.onclick = () => modalOverlay.classList.add('hidden');
+}
 
-    document.getElementById('save-entry').addEventListener('click', async () => {
-        const text = document.getElementById('entry').value;
-        if (text.trim()) {
-            await storage.saveEntry(text);
-            document.getElementById('entry').value = '';
-            alert('saved softly 💭');
+// ==================== Ambient Intelligence Toggle ====================
+smartToggle.addEventListener('click', () => {
+    smartEnabled = !smartEnabled;
+    smartToggle.classList.toggle('active', smartEnabled);
+    render();
+});
+
+// ==================== Edit/Delete Widgets ====================
+tabContent.addEventListener('click', async (e) => {
+    const target = e.target.closest('button');
+    if (!target) return;
+    const widgetId = Number(target.dataset.id);
+    if (!widgetId) return;
+    const widget = widgets.find(w => w.id === widgetId);
+    if (!widget) return;
+
+    if (target.classList.contains('delete-widget')) {
+        if (confirm('Delete this widget?')) {
+            await deleteWidget(widgetId);
         }
-    });
+    } else if (target.classList.contains('edit-widget')) {
+        editWidget(widget);
+    }
+});
 
+function editWidget(w) {
+    if (w.type === 'note') {
+        showModal('Edit Note', `
+            <input id="modal-note-title" value="${escapeHTML(w.title || '')}">
+            <textarea id="modal-note-content">${escapeHTML(w.content || '')}</textarea>
+        `, async () => {
+            w.title = document.getElementById('modal-note-title').value;
+            w.content = document.getElementById('modal-note-content').value;
+            await saveWidget(w);
+        });
+    } else if (w.type === 'code') {
+        showModal('Edit Code', `
+            <input id="modal-code-title" value="${escapeHTML(w.title || '')}">
+            <textarea id="modal-code-content">${escapeHTML(w.code || '')}</textarea>
+            <select id="modal-code-lang">
+                <option ${w.language==='javascript'?'selected':''}>javascript</option>
+                <option ${w.language==='python'?'selected':''}>python</option>
+                <option ${w.language==='html'?'selected':''}>html</option>
+                <option ${w.language==='css'?'selected':''}>css</option>
+            </select>
+        `, async () => {
+            w.title = document.getElementById('modal-code-title').value;
+            w.code = document.getElementById('modal-code-content').value;
+            w.language = document.getElementById('modal-code-lang').value;
+            await saveWidget(w);
+        });
+    } else if (w.type === 'link') {
+        showModal('Edit Link', `
+            <input id="modal-link-url" value="${escapeHTML(w.url || '')}">
+            <input id="modal-link-title" value="${escapeHTML(w.title || '')}">
+        `, async () => {
+            w.url = document.getElementById('modal-link-url').value;
+            w.title = document.getElementById('modal-link-title').value;
+            await saveWidget(w);
+        });
+    } else if (w.type === 'sticky') {
+        showModal('Edit Sticky', `
+            <textarea id="modal-sticky-text">${escapeHTML(w.text || '')}</textarea>
+            <input id="modal-sticky-color" type="color" value="${escapeHTML(w.color || '#2a5f3a')}">
+        `, async () => {
+            w.text = document.getElementById('modal-sticky-text').value;
+            w.color = document.getElementById('modal-sticky-color').value;
+            await saveWidget(w);
+        });
+    }
+}
+
+// ==================== Export/Import ====================
+function exportData() {
+    const data = JSON.stringify(widgets, null, 2);
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `softplace-backup-${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+function importData(file) {
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+        try {
+            const imported = JSON.parse(e.target.result);
+            // Clear existing and add all
+            const tx = db.transaction(STORE_NAME, 'readwrite');
+            const store = tx.objectStore(STORE_NAME);
+            await store.clear();
+            for (let w of imported) {
+                delete w.id; // let autoincrement assign new ids
+                store.add(w);
+            }
+            await loadWidgets();
+            render();
+            alert('Import successful');
+        } catch (err) {
+            alert('Invalid backup file');
+        }
+    };
+    reader.readAsText(file);
+}
+
+// ==================== GitHub Gist Sync (Stub) ====================
+async function syncWithGist() {
+    // This would require GitHub token. For now, just a placeholder.
+    alert('GitHub Gist sync not implemented yet. You can manually export/import.');
+}
+
+// ==================== Settings Modal (with export/import) ====================
+cmdButton.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    showSettings();
+});
+
+function showSettings() {
+    showModal('Settings', `
+        <div class="settings-group">
+            <button id="export-btn">Export Backup</button>
+            <button id="import-btn">Import Backup</button>
+        </div>
+        <div class="github-sync">
+            <button id="gist-sync">Sync with GitHub Gist (beta)</button>
+        </div>
+    `, () => {});
+    // Attach listeners after modal opens
+    document.getElementById('export-btn').addEventListener('click', () => {
+        exportData();
+        modalOverlay.classList.add('hidden');
+    });
+    document.getElementById('import-btn').addEventListener('click', () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        input.onchange = (e) => {
+            importData(e.target.files[0]);
+            modalOverlay.classList.add('hidden');
+        };
+        input.click();
+    });
+    document.getElementById('gist-sync').addEventListener('click', () => {
+        syncWithGist();
+        modalOverlay.classList.add('hidden');
+    });
+}
+
+// ==================== Initialize ====================
+window.onload = async () => {
+    await initDB();
+    await loadWidgets();
+    renderTabs();
+    render();
+
+    // Service worker
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/service-worker.js')
-            .then(() => debugLog('SW registered'))
-            .catch(err => debugLog('SW error', err));
+        navigator.serviceWorker.register('/service-worker.js');
     }
 };
