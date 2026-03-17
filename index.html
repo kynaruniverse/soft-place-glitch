@@ -11,12 +11,28 @@
 <body>
     <canvas id="bg-canvas"></canvas>
     <div id="pixel-compass"></div>
-    <div id="dream-pet"></div>
+    
+    <div id="dream-pet">
+        <svg width="80" height="80" viewBox="0 0 100 100">
+            <circle id="pet-body" cx="50" cy="50" r="30" fill="rgba(255,255,255,0.2)" stroke="white" stroke-width="2"/>
+            <circle id="pet-eye-left" cx="35" cy="40" r="5" fill="white"/>
+            <circle id="pet-eye-right" cx="65" cy="40" r="5" fill="white"/>
+        </svg>
+    </div>
+    
     <div id="journal">
         <textarea id="entry" placeholder="softly..." class="breathing-text"></textarea>
         <button id="save-entry">●</button>
     </div>
-    <div id="maze-overlay" style="display: none;"></div>
+    
+    <div id="maze-overlay" style="display: none;">
+        <canvas id="maze-canvas"></canvas>
+        <div id="maze-message">🌀 find the exit</div>
+    </div>
+    
+    <!-- Debug display (will be removed later) -->
+    <div id="debug-info" style="position:absolute; top:10px; left:10px; color:#0F0; font-size:12px; z-index:9999; background:rgba(0,0,0,0.5); padding:4px;"></div>
+    
     <script src="app.js"></script>
 </body>
 </html>

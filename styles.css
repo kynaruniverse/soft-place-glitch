@@ -14,6 +14,7 @@ body {
     position: fixed;
     width: 100%;
     touch-action: none;
+    transition: background-color 0.1s ease;
 }
 
 canvas {
@@ -40,11 +41,10 @@ canvas {
     right: 20px;
     width: 80px;
     height: 80px;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.05);
     z-index: 3;
     pointer-events: none;
     transition: transform 0.3s ease;
+    filter: drop-shadow(0 0 8px rgba(255,255,255,0.3));
 }
 
 #journal {
@@ -113,4 +113,11 @@ canvas {
     height: 100%;
     background: #0A0A0A;
     z-index: 100;
+}
+
+#debug-info {
+    font-family: monospace;
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-width: 90%;
 }
