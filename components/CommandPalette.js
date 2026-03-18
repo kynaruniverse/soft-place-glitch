@@ -55,25 +55,24 @@ export const CommandPalette = {
             results.innerHTML = '';
             return;
         }
-        // Show suggestions (could be dynamic)
+        // Show suggestions
         const suggestions = [];
         if (text.startsWith('note ')) {
-            suggestions.push(`Create note: "${text.slice(5)}"`);
+            suggestions.push(`note ${text.slice(5)}`);
         } else if (text.startsWith('code ')) {
-            suggestions.push(`Create code: "${text.slice(5)}"`);
+            suggestions.push(`code ${text.slice(5)}`);
         } else if (text.startsWith('link ')) {
-            suggestions.push(`Create link: "${text.slice(5)}"`);
+            suggestions.push(`link ${text.slice(5)}`);
         } else if (text.startsWith('sticky ')) {
-            suggestions.push(`Create sticky: "${text.slice(7)}"`);
+            suggestions.push(`sticky ${text.slice(7)}`);
         } else {
-            // Search suggestions
+            // Search suggestions from state
             import('../core/state.js').then(({ state }) => {
-                state.widgets.forEach(w => {
-                    if (w.title && w.title.toLowerCase().includes(text.toLowerCase())) {
-                        suggestions.push(`📄 ${w.title} (${w.type})`);
-                    }
-                });
-                this.displayResults(suggestions);
+                const matches = state.widgets.filter(w => 
+                    (w.title && w.title.toLowerCase().includes(text.toLowerCase())) ||
+                    (w.content && w.content.toLowerCase().includes(text.toLowerCase()))
+                );
+                this.displayResults(matches.map(w => `📄 ${w.title || w.content?.substring(0,30)} (${w.type})`));
             });
             return;
         }
@@ -81,7 +80,7 @@ export const CommandPalette = {
     },
 
     displayResults(items) {
-        results.innerHTML = items.map(item => `<div class="command-result-item">${item}</div>`).join('');
+        results.innerHTML = items.map(item => `<div class="command-result-item">${escapeHTML(item)}</div>`).join('');
         Array.from(results.children).forEach((el, i) => {
             el.addEventListener('click', () => {
                 input.value = items[i];
@@ -96,8 +95,17 @@ export const CommandPalette = {
     },
 
     showSearchResults(resultsArray) {
-        // Display search results in palette
         this.show();
-        results.innerHTML = resultsArray.map(w => `<div class="command-result-item">📄 ${w.title || w.content?.substring(0,30)} (${w.type})</div>`).join('');
+        results.innerHTML = resultsArray.map(w => 
+            `<div class="command-result-item">📄 ${w.title || w.content?.substring(0,30) || w.url} (${w.type})</div>`
+        ).join('');
+        // Click to navigate to widget? For now just show.
     }
 };
+
+function escapeHTML(str) {
+    if (!str) return '';
+    return String(str).replace(/[&<>"]/g, function(m) {
+        return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[m];
+    });
+}

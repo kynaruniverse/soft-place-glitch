@@ -1,4 +1,5 @@
 let overlay, modal, titleEl, contentEl, okBtn, cancelBtn;
+let currentOnOk = null;
 
 export const Modal = {
     init() {
@@ -25,7 +26,7 @@ export const Modal = {
 
         cancelBtn.addEventListener('click', () => this.hide());
         okBtn.addEventListener('click', () => {
-            if (this._onOk) this._onOk();
+            if (currentOnOk) currentOnOk();
             this.hide();
         });
     },
@@ -33,16 +34,16 @@ export const Modal = {
     show(title, contentHtml, onOk) {
         titleEl.textContent = title;
         contentEl.innerHTML = contentHtml;
-        this._onOk = onOk;
+        currentOnOk = onOk;
         overlay.classList.add('visible');
     },
 
     hide() {
         overlay.classList.remove('visible');
+        currentOnOk = null;
     },
 
     showEditModal(widget) {
-        // Build form based on widget type
         let html = '';
         if (widget.type === 'note') {
             html = `
@@ -87,8 +88,10 @@ export const Modal = {
                 widget.text = document.getElementById('modal-sticky-text').value;
                 widget.color = document.getElementById('modal-sticky-color').value;
             }
-            await (await import('../core/storage.js')).saveWidget(widget);
-            (await import('../core/state.js')).state.widgets = await (await import('../core/storage.js')).getAllWidgets();
+            const { saveWidget } = await import('./storage.js');
+            await saveWidget(widget);
+            const { state } = await import('../core/state.js');
+            state.widgets = await (await import('../core/storage.js')).getAllWidgets();
         });
     }
 };
@@ -108,47 +111,50 @@ export function showSettings() {
         </div>
     `, () => {});
     // Attach listeners after modal shows
-    document.getElementById('export-btn').addEventListener('click', () => {
-        import('../core/storage.js').then(({ getAllWidgets }) => {
-            getAllWidgets().then(widgets => {
-                const data = JSON.stringify(widgets, null, 2);
-                const blob = new Blob([data], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `make-backup-${new Date().toISOString().slice(0,10)}.json`;
-                a.click();
-                URL.revokeObjectURL(url);
-                Modal.hide();
+    setTimeout(() => {
+        document.getElementById('export-btn')?.addEventListener('click', () => {
+            import('../core/storage.js').then(({ getAllWidgets }) => {
+                getAllWidgets().then(widgets => {
+                    const data = JSON.stringify(widgets, null, 2);
+                    const blob = new Blob([data], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `make-backup-${new Date().toISOString().slice(0,10)}.json`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    Modal.hide();
+                });
             });
         });
-    });
-    document.getElementById('import-btn').addEventListener('click', () => {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = '.json';
-        input.onchange = (e) => {
-            const file = e.target.files[0];
-            const reader = new FileReader();
-            reader.onload = async (ev) => {
-                const imported = JSON.parse(ev.target.result);
-                const { clearAll, saveWidget } = await import('../core/storage.js');
-                await clearAll();
-                for (let w of imported) {
-                    delete w.id;
-                    await saveWidget(w);
-                }
-                (await import('../core/state.js')).state.widgets = await (await import('../core/storage.js')).getAllWidgets();
-                Modal.hide();
+        document.getElementById('import-btn')?.addEventListener('click', () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                reader.onload = async (ev) => {
+                    const imported = JSON.parse(ev.target.result);
+                    const { clearAll, saveWidget } = await import('../core/storage.js');
+                    await clearAll();
+                    for (let w of imported) {
+                        delete w.id;
+                        await saveWidget(w);
+                    }
+                    const { state } = await import('../core/state.js');
+                    state.widgets = await (await import('../core/storage.js')).getAllWidgets();
+                    Modal.hide();
+                };
+                reader.readAsText(file);
             };
-            reader.readAsText(file);
-        };
-        input.click();
-    });
-    document.getElementById('gist-sync').addEventListener('click', () => {
-        alert('GitHub Gist sync not yet implemented.');
-        Modal.hide();
-    });
+            input.click();
+        });
+        document.getElementById('gist-sync')?.addEventListener('click', () => {
+            alert('GitHub Gist sync not yet implemented.');
+            Modal.hide();
+        });
+    }, 100);
 }
 
 function escapeHTML(str) {
