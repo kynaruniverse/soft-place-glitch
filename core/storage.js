@@ -3,9 +3,11 @@ const STORE_NAME = 'widgets';
 const DB_VERSION = 1;
 
 let db;
+let dbReady = null;
 
-export function initDB() {
-    return new Promise((resolve, reject) => {
+function initDB() {
+    if (dbReady) return dbReady;
+    dbReady = new Promise((resolve, reject) => {
         const request = indexedDB.open(DB_NAME, DB_VERSION);
         request.onerror = () => reject(request.error);
         request.onsuccess = () => {
@@ -21,9 +23,16 @@ export function initDB() {
             }
         };
     });
+    return dbReady;
+}
+
+// Wait for DB before any operation
+async function ensureDB() {
+    await initDB();
 }
 
 export async function getAllWidgets() {
+    await ensureDB();
     return new Promise((resolve) => {
         const tx = db.transaction(STORE_NAME, 'readonly');
         const store = tx.objectStore(STORE_NAME);
@@ -33,6 +42,7 @@ export async function getAllWidgets() {
 }
 
 export async function saveWidget(widget) {
+    await ensureDB();
     const tx = db.transaction(STORE_NAME, 'readwrite');
     const store = tx.objectStore(STORE_NAME);
     if (widget.id) {
@@ -47,6 +57,7 @@ export async function saveWidget(widget) {
 }
 
 export async function deleteWidget(id) {
+    await ensureDB();
     const tx = db.transaction(STORE_NAME, 'readwrite');
     const store = tx.objectStore(STORE_NAME);
     store.delete(id);
@@ -56,6 +67,7 @@ export async function deleteWidget(id) {
 }
 
 export async function clearAll() {
+    await ensureDB();
     const tx = db.transaction(STORE_NAME, 'readwrite');
     const store = tx.objectStore(STORE_NAME);
     store.clear();
@@ -64,5 +76,5 @@ export async function clearAll() {
     });
 }
 
-// Initialize DB on module load
+// Initialize on module load (but no need to await here)
 initDB().catch(console.error);
