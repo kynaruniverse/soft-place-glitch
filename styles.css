@@ -338,3 +338,39 @@ main {
         padding: 8px;
     }
 }
+
+/* Card sizes */
+.card.size-small {
+    width: 200px;
+}
+.card.size-medium {
+    width: 280px;
+}
+.card.size-large {
+    width: 360px;
+}
+
+/* Code block styling */
+.widget-code {
+    background: #1e2328;
+    padding: 8px;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-family: 'Fira Code', monospace;
+    font-size: 13px;
+}
+
+/* Link styling */
+.widget-link {
+    color: #5a7d9c;
+    text-decoration: none;
+    word-break: break-all;
+}
+.widget-link:hover {
+    text-decoration: underline;
+}
+
+/* Selection mode indicator */
+.card.selected {
+    border: 2px solid #5a7d9c;
+}
