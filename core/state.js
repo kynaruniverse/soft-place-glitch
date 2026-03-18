@@ -1,3 +1,5 @@
+import { getAllWidgets } from './storage.js';
+
 // Simple pub/sub state with localStorage persistence for ambient
 export const state = {
     _data: {
@@ -51,7 +53,11 @@ export const state = {
     }
 };
 
-import { getAllWidgets } from './storage.js';
 export async function loadInitialData() {
-    state.widgets = await getAllWidgets() || [];
+    try {
+        state.widgets = await getAllWidgets() || [];
+    } catch (err) {
+        console.error('Failed to load widgets', err);
+        state.widgets = [];
+    }
 }
