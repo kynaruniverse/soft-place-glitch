@@ -864,3 +864,81 @@ body{background:var(--sage);color:#fff;font-family:var(--font-body);font-size:14
 @media (prefers-reduced-motion: reduce) {
   *,*::before,*::after{animation-duration:0.01ms !important;transition-duration:0.01ms !important;}
 }
+
+/* ─── Syntax highlighting (utils/syntax.js) ────────────────── */
+.code-highlight-wrap {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+}
+.code-highlight {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 12px 14px;
+  font: inherit;
+  font-family: 'Menlo','Consolas','SF Mono',monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-all;
+  overflow: auto;
+  color: transparent;
+  pointer-events: none;
+  background: transparent;
+}
+.code-textarea--transparent {
+  position: relative;
+  background: transparent !important;
+  color: var(--text, #1a1a2e);
+  caret-color: var(--text, #1a1a2e);
+  z-index: 1;
+}
+[data-theme="dark"] .code-textarea--transparent {
+  color: #e8eaf6;
+  caret-color: #e8eaf6;
+}
+
+/* Token colours — light mode */
+.sh-comment { color: #6a9955; }
+.sh-string   { color: #ce9178; }
+.sh-keyword  { color: #569cd6; font-weight: 600; }
+.sh-number   { color: #b5cea8; }
+.sh-fn       { color: #dcdcaa; }
+.sh-tag      { color: #4ec9b0; }
+.sh-attr     { color: #9cdcfe; }
+.sh-builtin  { color: #4fc1ff; }
+.sh-type     { color: #4ec9b0; }
+.sh-decor    { color: #c586c0; }
+.sh-prop     { color: #9cdcfe; }
+.sh-bool     { color: #569cd6; }
+
+/* Ensure the highlight pre and textarea scroll together */
+.code-editor-frame {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+/* ─── Live tag preview (ui/note-editor.js) ──────────────────── */
+.editor-tag-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 6px 16px 4px;
+  min-height: 28px;
+}
+.tag-chip--live {
+  background: var(--accent, #9ba59a);
+  color: #fff;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  opacity: 0.85;
+  animation: tag-pop 150ms ease;
+}
+@keyframes tag-pop {
+  from { transform: scale(0.85); opacity: 0; }
+  to   { transform: scale(1);    opacity: 0.85; }
+}

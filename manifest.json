@@ -2,13 +2,16 @@
   "name": "Maké · your command center",
   "short_name": "Maké",
   "description": "A personal command center with floating stickies and organised cards.",
-  "start_url": "/Make/",
-  "scope": "/Make/",
+
+  "start_url": ".",
+  "scope": ".",
+
   "display": "standalone",
   "background_color": "#9ba59a",
   "theme_color": "#9ba59a",
   "orientation": "portrait-primary",
   "categories": ["productivity", "utilities"],
+
   "icons": [
     {
       "src": "./icons/icon-192.png",
@@ -35,6 +38,7 @@
       "purpose": "maskable"
     }
   ],
+
   "screenshots": [],
   "prefer_related_applications": false
 }

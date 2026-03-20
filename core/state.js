@@ -1,9 +1,9 @@
 /**
- * MAKÉ CORE — state.js (V2)
- * Reactive state store.
- * - ambientEnabled persisted to localStorage (was lost on refresh in V1)
- * - sortField / sortDir / viewMode added for Samsung Notes-derived features
- * - Surgical mutation helpers so render() does minimal DOM work
+ * MAKÉ CORE — state.js (V3)
+ * Changes from V2:
+ * - FIX: filterFavourites is now a proper getter/setter persisted to
+ *   localStorage instead of a raw _data mutation.  Refresh no longer
+ *   resets the favourites filter.
  */
 
 import { getAllItems } from './storage.js';
@@ -15,8 +15,8 @@ function loadPrefs() {
   catch { return {}; }
 }
 
-function savePrefs(prefs) {
-  try { localStorage.setItem(PREFS_KEY, JSON.stringify(prefs)); }
+function savePrefs(patch) {
+  try { localStorage.setItem(PREFS_KEY, JSON.stringify({ ...loadPrefs(), ...patch })); }
   catch { /* storage full, ignore */ }
 }
 
@@ -29,13 +29,15 @@ export const state = {
     currentTab:       prefs.currentTab       || 'notes',
     showAddMenu:      false,
     ambientEnabled:   prefs.ambientEnabled   ?? false,
+    filterFavourites: prefs.filterFavourites ?? false,   // FIX: initialised from prefs
     sortField:        prefs.sortField        || 'updatedAt',
     sortDir:          prefs.sortDir          || 'desc',
     viewMode:         prefs.viewMode         || 'grid',
   },
   _listeners: [],
 
-  // ── Getters / setters with auto-notify ──
+  // ── Getters / setters with auto-notify ──────────────────────
+
   get backgroundItems()  { return this._data.backgroundItems; },
   set backgroundItems(v) { this._data.backgroundItems = v; this._notify(); },
 
@@ -43,47 +45,29 @@ export const state = {
   set stickyItems(v) { this._data.stickyItems = v; this._notify(); },
 
   get currentTab()  { return this._data.currentTab; },
-  set currentTab(v) {
-    this._data.currentTab = v;
-    savePrefs({ ...loadPrefs(), currentTab: v });
-    this._notify();
-  },
+  set currentTab(v) { this._data.currentTab = v; savePrefs({ currentTab: v }); this._notify(); },
 
   get showAddMenu()  { return this._data.showAddMenu; },
   set showAddMenu(v) { this._data.showAddMenu = v; this._notify(); },
 
   get ambientEnabled()  { return this._data.ambientEnabled; },
-  set ambientEnabled(v) {
-    this._data.ambientEnabled = v;
-    savePrefs({ ...loadPrefs(), ambientEnabled: v });
-    this._notify();
-  },
+  set ambientEnabled(v) { this._data.ambientEnabled = v; savePrefs({ ambientEnabled: v }); this._notify(); },
+
+  // FIX: filterFavourites is now a proper persisted setter, not a raw _data mutation.
+  get filterFavourites()  { return this._data.filterFavourites; },
+  set filterFavourites(v) { this._data.filterFavourites = v; savePrefs({ filterFavourites: v }); this._notify(); },
 
   get sortField()  { return this._data.sortField; },
-  set sortField(v) {
-    this._data.sortField = v;
-    savePrefs({ ...loadPrefs(), sortField: v });
-    this._notify();
-  },
+  set sortField(v) { this._data.sortField = v; savePrefs({ sortField: v }); this._notify(); },
 
   get sortDir()  { return this._data.sortDir; },
-  set sortDir(v) {
-    this._data.sortDir = v;
-    savePrefs({ ...loadPrefs(), sortDir: v });
-    this._notify();
-  },
+  set sortDir(v) { this._data.sortDir = v; savePrefs({ sortDir: v }); this._notify(); },
 
   get viewMode()  { return this._data.viewMode; },
-  set viewMode(v) {
-    this._data.viewMode = v;
-    savePrefs({ ...loadPrefs(), viewMode: v });
-    this._notify();
-  },
-
+  set viewMode(v) { this._data.viewMode = v; savePrefs({ viewMode: v }); this._notify(); },
 
   subscribe(cb) { this._listeners.push(cb); },
-
-  _notify() { this._listeners.forEach(fn => fn()); },
+  _notify()     { this._listeners.forEach(fn => fn()); },
 };
 
 /** Load all items from IndexedDB, split by layer. */
