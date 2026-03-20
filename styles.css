@@ -222,11 +222,9 @@ body{background:var(--sage);color:#fff;font-family:var(--font-body);font-size:14
   transform:       rotate(var(--sticky-r, 0deg));
   transition:      box-shadow var(--dur-fast) var(--ease-std);
   background:      var(--sticky-color, #fff176);
-  /* Layered shadow for paper depth */
   box-shadow:
     var(--shadow-paper),
     inset 0 -1px 0 rgba(0,0,0,0.06);
-  /* Slight paper texture via gradient */
   background-image:
     linear-gradient(
       175deg,
@@ -250,7 +248,6 @@ body{background:var(--sage);color:#fff;font-family:var(--font-body);font-size:14
   z-index: 100;
 }
 
-/* Tape strip at the top */
 .sticky-tape {
   position:    absolute;
   top:         -9px;
@@ -262,7 +259,6 @@ body{background:var(--sage);color:#fff;font-family:var(--font-body);font-size:14
   border-radius: 2px;
   box-shadow:  0 1px 3px rgba(0,0,0,0.14), inset 0 1px 0 rgba(255,255,255,0.6);
   z-index:     2;
-  /* Tape texture lines */
   background-image: repeating-linear-gradient(
     90deg,
     transparent,
@@ -272,7 +268,6 @@ body{background:var(--sage);color:#fff;font-family:var(--font-body);font-size:14
   );
 }
 
-/* Bottom-right fold */
 .sticky-fold {
   position:  absolute;
   bottom:    0;
@@ -298,7 +293,6 @@ body{background:var(--sage);color:#fff;font-family:var(--font-body);font-size:14
   border-color: transparent transparent transparent rgba(0,0,0,0.06);
 }
 
-/* Inner pad with top padding for tape */
 .sticky-inner {
   flex:            1;
   display:         flex;
@@ -505,7 +499,6 @@ body{background:var(--sage);color:#fff;font-family:var(--font-body);font-size:14
   transform: translateY(0);
 }
 
-/* Top bar */
 .editor-topbar {
   display:         flex;
   align-items:     center;
@@ -560,7 +553,6 @@ body{background:var(--sage);color:#fff;font-family:var(--font-body);font-size:14
 }
 .editor-save-btn:active { background: var(--rose-dark); transform: scale(0.95); }
 
-/* Title input */
 .editor-title-input {
   width:           100%;
   background:      transparent;
@@ -585,7 +577,6 @@ body{background:var(--sage);color:#fff;font-family:var(--font-body);font-size:14
   background: var(--dark-modal);
 }
 
-/* Toolbar */
 .editor-toolbar {
   display:          flex;
   align-items:      center;
@@ -646,7 +637,6 @@ body{background:var(--sage);color:#fff;font-family:var(--font-body);font-size:14
 
 .size-btn { font-size: 10px; font-weight: 600; letter-spacing: -0.3px; }
 
-/* Color dot swatches */
 .color-swatches { gap: 5px; }
 
 .toolbar-color-dot {
@@ -662,7 +652,6 @@ body{background:var(--sage);color:#fff;font-family:var(--font-body);font-size:14
 .toolbar-color-dot:active  { transform: scale(0.82); }
 .toolbar-color-dot:hover   { border-color: white; transform: scale(1.12); }
 
-/* Rich text body */
 .editor-body {
   flex:          1;
   overflow-y:    auto;
@@ -678,7 +667,6 @@ body{background:var(--sage);color:#fff;font-family:var(--font-body);font-size:14
   caret-color:   var(--rose);
 }
 
-/* Rich text styling inside contenteditable */
 .editor-body h2        { font-size: 20px; font-weight: 700; margin: 8px 0 4px; color: white; }
 .editor-body strong, .editor-body b  { color: white; font-weight: 700; }
 .editor-body em, .editor-body i      { color: rgba(255,255,255,0.85); }
@@ -686,6 +674,28 @@ body{background:var(--sage);color:#fff;font-family:var(--font-body);font-size:14
 .editor-body ol        { padding-left: 20px; margin: 4px 0; }
 .editor-body li        { margin: 2px 0; }
 .editor-body div       { min-height: 1em; }
+
+/* ─── Live tag preview (ui/note-editor.js) ─────────────────── */
+.editor-tag-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 6px 16px 4px;
+  min-height: 28px;
+}
+.tag-chip--live {
+  background: var(--sage);
+  color: #fff;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  opacity: 0.85;
+  animation: tag-pop 150ms ease;
+}
+@keyframes tag-pop {
+  from { transform: scale(0.85); opacity: 0; }
+  to   { transform: scale(1);    opacity: 0.85; }
+}
 
 /* ============================================================
    CODE EDITOR
@@ -717,7 +727,6 @@ body{background:var(--sage);color:#fff;font-family:var(--font-body);font-size:14
 .code-filename-input:focus { border-color: rgba(182,141,147,0.55); }
 .code-filename-input::placeholder { color: rgba(255,255,255,0.28); }
 
-/* Language tag strip */
 .code-lang-strip {
   display:       flex;
   gap:           6px;
@@ -752,12 +761,14 @@ body{background:var(--sage);color:#fff;font-family:var(--font-body);font-size:14
   font-weight:  700;
 }
 
-/* Code editor frame (gutter + textarea) */
+/* Code editor frame — FIX: merged, single definition with both
+   min-height:0 (flex child fix) and position:relative (for overlay) */
 .code-editor-frame {
-  flex:        1;
-  display:     flex;
-  overflow:    hidden;
-  min-height:  0;
+  flex:          1;
+  display:       flex;
+  overflow:      hidden;
+  min-height:    0;
+  position:      relative;
 }
 
 /* Line number gutter */
@@ -778,12 +789,62 @@ body{background:var(--sage);color:#fff;font-family:var(--font-body);font-size:14
   -webkit-user-select: none;
 }
 .code-gutter > div {
-  height:     19.2px; /* match textarea line height */
-  display:    block;
+  height:      19.2px;
+  display:     block;
   white-space: nowrap;
 }
 
-/* Code textarea */
+/* ─── Syntax highlight overlay ─────────────────────────────── */
+
+/* Wrapper fills remaining space after gutter */
+.code-highlight-wrap {
+  position: relative;
+  flex:     1;
+  overflow: hidden;
+}
+
+/* The coloured <pre> sits behind the textarea */
+.code-highlight {
+  position:    absolute;
+  inset:       0;
+  margin:      0;
+  padding:     12px 14px;
+  font-family: var(--font-mono);   /* FIX: matches textarea font */
+  font-size:   12px;               /* FIX: matches textarea 12px */
+  line-height: 1.6;
+  white-space: pre;                /* FIX: matches textarea white-space */
+  overflow-wrap: normal;           /* FIX: matches textarea overflow-wrap */
+  overflow:    auto;
+  pointer-events: none;
+  background:  transparent;
+  /* Tokens provide their own colour; base text is invisible */
+  color:       transparent;
+}
+
+/* The textarea is transparent so highlight shows through */
+.code-textarea--transparent {
+  position:   relative;
+  z-index:    1;
+  background: transparent !important;
+  color:      transparent;         /* FIX: was var(--text,#1a1a2e) — caused double text */
+  caret-color: #d4d4d4;           /* keep the cursor visible */
+}
+
+/* Token colours (VS Code Dark+ palette) */
+.sh-comment { color: #6a9955; }
+.sh-string   { color: #ce9178; }
+.sh-keyword  { color: #569cd6; font-weight: 600; }
+.sh-number   { color: #b5cea8; }
+.sh-fn       { color: #dcdcaa; }
+.sh-tag      { color: #4ec9b0; }
+.sh-attr     { color: #9cdcfe; }
+.sh-builtin  { color: #4fc1ff; }
+.sh-type     { color: #4ec9b0; }
+.sh-decor    { color: #c586c0; }
+.sh-prop     { color: #9cdcfe; }
+.sh-bool     { color: #569cd6; }
+
+/* Base code textarea (no-highlight path — keeps its own color) */
 .code-textarea {
   flex:          1;
   background:    #1a1d1c;
@@ -863,82 +924,4 @@ body{background:var(--sage);color:#fff;font-family:var(--font-body);font-size:14
    ============================================================ */
 @media (prefers-reduced-motion: reduce) {
   *,*::before,*::after{animation-duration:0.01ms !important;transition-duration:0.01ms !important;}
-}
-
-/* ─── Syntax highlighting (utils/syntax.js) ────────────────── */
-.code-highlight-wrap {
-  position: relative;
-  flex: 1;
-  overflow: hidden;
-}
-.code-highlight {
-  position: absolute;
-  inset: 0;
-  margin: 0;
-  padding: 12px 14px;
-  font: inherit;
-  font-family: 'Menlo','Consolas','SF Mono',monospace;
-  font-size: 13px;
-  line-height: 1.6;
-  white-space: pre-wrap;
-  word-break: break-all;
-  overflow: auto;
-  color: transparent;
-  pointer-events: none;
-  background: transparent;
-}
-.code-textarea--transparent {
-  position: relative;
-  background: transparent !important;
-  color: var(--text, #1a1a2e);
-  caret-color: var(--text, #1a1a2e);
-  z-index: 1;
-}
-[data-theme="dark"] .code-textarea--transparent {
-  color: #e8eaf6;
-  caret-color: #e8eaf6;
-}
-
-/* Token colours — light mode */
-.sh-comment { color: #6a9955; }
-.sh-string   { color: #ce9178; }
-.sh-keyword  { color: #569cd6; font-weight: 600; }
-.sh-number   { color: #b5cea8; }
-.sh-fn       { color: #dcdcaa; }
-.sh-tag      { color: #4ec9b0; }
-.sh-attr     { color: #9cdcfe; }
-.sh-builtin  { color: #4fc1ff; }
-.sh-type     { color: #4ec9b0; }
-.sh-decor    { color: #c586c0; }
-.sh-prop     { color: #9cdcfe; }
-.sh-bool     { color: #569cd6; }
-
-/* Ensure the highlight pre and textarea scroll together */
-.code-editor-frame {
-  display: flex;
-  flex: 1;
-  overflow: hidden;
-  position: relative;
-}
-
-/* ─── Live tag preview (ui/note-editor.js) ──────────────────── */
-.editor-tag-preview {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  padding: 6px 16px 4px;
-  min-height: 28px;
-}
-.tag-chip--live {
-  background: var(--accent, #9ba59a);
-  color: #fff;
-  font-size: 11px;
-  padding: 2px 8px;
-  border-radius: 20px;
-  opacity: 0.85;
-  animation: tag-pop 150ms ease;
-}
-@keyframes tag-pop {
-  from { transform: scale(0.85); opacity: 0; }
-  to   { transform: scale(1);    opacity: 0.85; }
 }
