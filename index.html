@@ -6,7 +6,7 @@
   <title>Maké · your command center</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#7d9e8c">
+  <meta name="theme-color" content="#9ba59a">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head>
@@ -14,11 +14,11 @@
   <div id="app"></div>
   <script type="module" src="app.js"></script>
   <script>
-    if ("serviceWorker" in navigator) {
-      window.addEventListener("load", () => {
-        navigator.serviceWorker.register("./service-worker.js")
-          .then(r => console.log("[Maké SW] registered:", r.scope))
-          .catch(e => console.warn("[Maké SW] failed:", e));
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./service-worker.js')
+          .then(r => console.log('[Maké SW] registered:', r.scope))
+          .catch(e => console.warn('[Maké SW] failed:', e));
       });
     }
   </script>
