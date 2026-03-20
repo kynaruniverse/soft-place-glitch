@@ -1,4 +1,4 @@
-const CACHE = 'make-v3';
+const CACHE = 'make-v4';
 const PRECACHE = [
   './',
   './index.html',
