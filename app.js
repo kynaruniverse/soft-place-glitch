@@ -76,10 +76,10 @@ function buildShell() {
     <div class="app-header">
       <div class="header-row">
 
-        <button class="date-widget" id="date-widget" aria-label="Open menu">
+        <div class="date-widget" id="date-widget" aria-hidden="true">
           <div class="date-widget-date">${date}</div>
           <div class="date-widget-day">${day}</div>
-        </button>
+        </div>
 
         <div class="header-right">
           <button class="toggle-track ${isDark ? 'on' : ''}" id="theme-toggle" aria-label="Toggle theme">
@@ -93,14 +93,14 @@ function buildShell() {
     </div>
 
     <div class="header-toolbar">
+      <button class="burger-btn" id="burger-btn" aria-label="Menu">
+        <svg viewBox="0 0 24 24"><line x1="3" y1="6"  x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
       <div class="divider-group">
         <div class="divider-line" style="width:86px"></div>
         <div class="divider-line" style="width:64px"></div>
         <div class="divider-line" style="width:46px"></div>
       </div>
-      <button class="burger-btn" id="burger-btn" aria-label="Menu">
-        <svg viewBox="0 0 24 24"><line x1="3" y1="6"  x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-      </button>
     </div>
 
     <div class="canvas">
@@ -335,9 +335,15 @@ function attachShellListeners() {
   // Theme toggle
   document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
 
-  // Date widget & burger both open drawer
-  document.getElementById('date-widget').addEventListener('click', showDrawer);
-  document.getElementById('burger-btn').addEventListener('click', showDrawer);
+  // Refresh date widget every minute so it stays accurate
+  setInterval(() => {
+    const { day, date } = getLiveDate();
+    const dw = document.getElementById('date-widget');
+    if (dw) {
+      dw.querySelector('.date-widget-date').textContent = date;
+      dw.querySelector('.date-widget-day').textContent  = day;
+    }
+  }, 60_000);
 
   // Settings
   document.getElementById('settings-btn').addEventListener('click', showSettingsModal);

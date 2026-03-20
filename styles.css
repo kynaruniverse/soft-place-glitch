@@ -95,7 +95,7 @@ body {
   width: 100%; margin-bottom: 2px;
 }
 
-/* DATE WIDGET — left, #b68d93, echo drop shadow, shows live date */
+/* DATE WIDGET — display only, Canva echo effect */
 .date-widget {
   width: 150px; min-height: 72px;
   background: var(--rose);
@@ -103,15 +103,19 @@ body {
   padding: 10px 14px 12px;
   display: flex; flex-direction: column;
   justify-content: center; gap: 3px;
-  cursor: pointer; flex-shrink: 0;
-  border: none; text-align: left; color: white;
-  box-shadow: 4px 4px 0px var(--rose-dark), var(--shadow-md);
-  transition: transform var(--dur-fast) var(--ease-spring),
-              box-shadow var(--dur-fast) var(--ease-spring);
-}
-.date-widget:active {
-  transform: translate(3px,3px);
-  box-shadow: 1px 1px 0px var(--rose-dark), var(--shadow-sm);
+  flex-shrink: 0;
+  /* Non-interactive */
+  pointer-events: none;
+  cursor: default;
+  user-select: none;
+  /* Canva echo effect — 3 progressively offset sage-toned layers */
+  box-shadow:
+    4px  4px  0px 0px #7a8f8d,
+    8px  8px  0px 0px #6b7e7c,
+    12px 12px 0px 0px #5c6e6c,
+    0 6px 20px rgba(0,0,0,0.22);
+  color: white;
+  text-align: left;
 }
 .date-widget-date {
   font-size: 10.5px; font-weight: 500;
@@ -159,30 +163,32 @@ body {
   text-align: center; margin-top: 3px; margin-bottom: 2px;
 }
 
-/* ── TOOLBAR ROW (divider lines + burger) ── */
+/* ── TOOLBAR ROW (burger left + divider lines right) ── */
 .header-toolbar {
   display: flex; align-items: center;
   justify-content: space-between;
   width: 100%; padding: 6px 18px 8px; flex-shrink: 0;
 }
-.divider-group { display:flex; flex-direction:column; gap:4px; }
+.divider-group { display:flex; flex-direction:column; gap:4px; align-items: flex-end; }
 .divider-line {
   height: 3px; border-radius: 2px;
   background: var(--rose);
 }
 
 .burger-btn {
-  width:40px;height:40px;
-  background: rgba(255,255,255,0.10);
-  border: 1px solid rgba(255,255,255,0.16);
+  width:44px;height:44px;
+  background: var(--rose);
+  border: none;
   border-radius: var(--r-md);
-  color: rgba(255,255,255,0.85);
+  color: white;
   cursor: pointer;
   display:flex;align-items:center;justify-content:center;
-  transition: background var(--dur-fast);
+  transition: background var(--dur-fast), transform var(--dur-fast) var(--ease-spring);
+  box-shadow: var(--shadow-sm);
+  flex-shrink: 0;
 }
-.burger-btn:active { background: rgba(255,255,255,0.18); }
-.burger-btn svg { width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round; }
+.burger-btn:active { background: var(--rose-dark); transform: scale(0.92); }
+.burger-btn svg { width:20px;height:20px;stroke:white;fill:none;stroke-width:2.2;stroke-linecap:round; }
 
 /* ── CANVAS ── */
 .canvas { flex:1; position:relative; overflow:hidden; min-height:0; }
