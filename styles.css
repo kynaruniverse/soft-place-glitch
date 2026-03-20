@@ -1,24 +1,29 @@
 /* ============================================================
-   MAK\u00c9 V4 \u2014 styles.css
-   HOW TO USE: Search the label name (e.g. "BURGER BUTTON")
-   to jump directly to that element's styles.
+   MAKÉ V4 — styles.css  (FREE-POSITION EDITION)
+   
+   HOW TO MOVE ANYTHING:
+   Every major element uses  position: fixed  with explicit
+   top / left / right / bottom / width / height values.
+   Change those numbers to place the element anywhere on screen.
+   
+   Search the ALL-CAPS label to jump to any element.
+   e.g. search  BURGER BUTTON  → find its top/left/width/height
    ============================================================
 
-   ELEMENT INDEX \u2014 searchable labels:
-   \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+   ELEMENT INDEX
+   ─────────────────────────────────────────────────────────────
    CSS VARIABLES
    DARK THEME
    RESET & BASE
    APP ROOT
    LOADING SPINNER
-   APP HEADER
-   HEADER ROW
-   DATE WIDGET
-   THEME TOGGLE
-   APP TITLE
-   APP SUBTITLE
-   BURGER BUTTON
-   CANVAS
+   APP HEADER WRAPPER
+   BURGER BUTTON             position: fixed — free coords
+   DATE WIDGET               position: fixed — free coords
+   THEME TOGGLE              position: fixed — free coords
+   APP TITLE                 position: fixed — free coords
+   APP SUBTITLE              position: fixed — free coords
+   CANVAS                    position: fixed — defines card area
    GRID LAYER
    CARD GRID
    CARD BASE
@@ -30,8 +35,9 @@
    EMPTY STATE
    STICKY LAYER
    STICKY NOTE
-   ADD MENU
-   BOTTOM NAV
+   ADD MENU                  position: fixed — free coords
+   BOTTOM NAV                position: fixed — free coords
+   NAV BUTTONS
    FAB BUTTON
    DRAWER OVERLAY
    DRAWER
@@ -50,12 +56,12 @@
    SEARCH FILTER CHIPS
    SEARCH RESULTS
    CONTEXT MENU
-   TOAST BANNER
+   TOAST BANNER              position: fixed — free coords
    SCROLLBAR
    KEYFRAMES
    UTILITY CLASSES
    REDUCED MOTION
-   \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+   ─────────────────────────────────────────────────────────────
 */
 
 
@@ -67,7 +73,6 @@
    ============================================================ */
 
 :root {
-  /* --- Palette --- */
   --rose:        #b68d93;
   --rose-dark:   #9e7279;
   --rose-light:  #cdb0b5;
@@ -80,41 +85,25 @@
   --dark-modal:  #3a3a3a;
   --dark-drawer: #363636;
 
-  /* --- Spacing --- */
-  --sp-2:  4px;
-  --sp-3:  6px;
-  --sp-4:  8px;
-  --sp-5:  10px;
-  --sp-6:  12px;
-  --sp-8:  16px;
-  --sp-10: 20px;
-  --sp-12: 24px;
+  --sp-2: 4px;  --sp-3: 6px;  --sp-4: 8px;  --sp-5: 10px;
+  --sp-6: 12px; --sp-8: 16px; --sp-10: 20px; --sp-12: 24px;
 
-  /* --- Border Radius --- */
-  --r-sm:   8px;
-  --r-md:   12px;
-  --r-lg:   16px;
-  --r-xl:   20px;
-  --r-2xl:  24px;
-  --r-full: 9999px;
+  --r-sm: 8px; --r-md: 12px; --r-lg: 16px; --r-xl: 20px;
+  --r-2xl: 24px; --r-full: 9999px;
 
-  /* --- Shadows --- */
   --shadow-sm: 0 2px 8px  rgba(0,0,0,0.18);
   --shadow-md: 0 4px 16px rgba(0,0,0,0.26);
   --shadow-lg: 0 8px 28px rgba(0,0,0,0.38);
   --shadow-xl: 0 16px 40px rgba(0,0,0,0.45);
 
-  /* --- Fonts --- */
   --font-display: 'Georgia','Times New Roman',serif;
   --font-body:    'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
   --font-mono:    'Courier New','Consolas',monospace;
 
-  /* --- Easing Curves --- */
   --ease-spring: cubic-bezier(0.22,0.25,0.0,1.0);
   --ease-out:    cubic-bezier(0.0,0.0,0.2,1.0);
   --ease-std:    cubic-bezier(0.2,0.0,0.0,1.0);
 
-  /* --- Durations --- */
   --dur-fast: 150ms;
   --dur-med:  260ms;
   --dur-slow: 400ms;
@@ -125,7 +114,7 @@
 
 /* ============================================================
    DARK THEME
-   Overrides applied when [data-theme="dark"] is set on root.
+   Overrides applied when [data-theme="dark"] is on root.
    ============================================================ */
 
 [data-theme="dark"] {
@@ -142,32 +131,30 @@
 
 /* ============================================================
    RESET & BASE
-   Global box model reset, html/body defaults, body styles.
    ============================================================ */
 
 *,
 *::before,
 *::after {
-  margin: 0;
-  padding: 0;
+  margin:     0;
+  padding:    0;
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
 }
 
-html,
-body {
-  height: 100%;
+html, body {
+  height:   100%;
   overflow: hidden;
 }
 
 body {
-  background:    var(--sage);
-  color:         #fff;
-  font-family:   var(--font-body);
-  font-size:     14px;
-  line-height:   1.5;
+  background:  var(--sage);
+  color:       #fff;
+  font-family: var(--font-body);
+  font-size:   14px;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
-  user-select:   none;
+  user-select: none;
 }
 
 
@@ -175,16 +162,19 @@ body {
 
 /* ============================================================
    APP ROOT
-   The top-level #app wrapper. Controls overall layout flow.
+   Full-screen background layer. Not a layout parent —
+   every child element uses position: fixed for free placement.
    ============================================================ */
 
 #app {
-  height:           100dvh;
-  display:          flex;
-  flex-direction:   column;
-  background:       var(--sage);
-  overflow:         hidden;
-  position:         relative;
+  position:   fixed;
+  top:        0;
+  left:       0;
+  width:      100vw;
+  height:     100dvh;
+  background: var(--sage);
+  overflow:   hidden;
+  z-index:    0;
 }
 
 
@@ -192,66 +182,113 @@ body {
 
 /* ============================================================
    LOADING SPINNER
-   Centred loading indicator shown while app data loads.
+   Centred on screen while data loads.
+
+   MOVE IT  →  change top / left
+   RESIZE   →  change width / height on .make-loading-spinner
    ============================================================ */
 
 .make-loading {
-  position:   absolute;
-  top:        50%;
-  left:       50%;
-  transform:  translate(-50%, -50%);
-  display:    flex;
-  align-items: center;
-  gap:        10px;
-  color:      rgba(255,255,255,0.5);
-  font-size:  14px;
-}
+  position:  fixed;
+  top:       50%;                  /* distance from top of screen    */
+  left:      50%;                  /* distance from left of screen   */
+  transform: translate(-50%, -50%);
 
-.make-loading-spinner {
-  width:              20px;
-  height:             20px;
-  border:             2px solid rgba(255,255,255,0.15);
-  border-top-color:   var(--rose);
-  border-radius:      var(--r-full);
-  animation:          spin 0.7s linear infinite;
-}
-
-
-
-
-/* ============================================================
-   APP HEADER
-   Outermost header container. Controls top padding and layout.
-   ============================================================ */
-
-.app-header {
-  display:          flex;
-  flex-direction:   column;
-  align-items:      center;
-  padding:          14px 18px 4px;
-  flex-shrink:      0;
-}
-
-
-
-
-/* ============================================================
-   HEADER ROW
-   Inner row inside header \u2014 holds burger, date, toggle, etc.
-   ============================================================ */
-
-.header-row {
-  display:         flex;
-  align-items:     flex-start;
-  justify-content: space-between;
-  width:           100%;
-  margin-bottom:   2px;
-}
-
-.header-right {
   display:     flex;
   align-items: center;
   gap:         10px;
+  color:       rgba(255,255,255,0.5);
+  font-size:   14px;
+  z-index:     999;
+}
+
+.make-loading-spinner {
+  width:            20px;          /* spinner diameter               */
+  height:           20px;
+  border:           2px solid rgba(255,255,255,0.15);
+  border-top-color: var(--rose);
+  border-radius:    var(--r-full);
+  animation:        spin 0.7s linear infinite;
+}
+
+
+
+
+/* ============================================================
+   APP HEADER WRAPPER
+   Neutral transparent shell — does NOT control layout.
+   All children (burger, date, toggle, title, subtitle) are
+   position: fixed below with their own independent coords.
+   ============================================================ */
+
+.app-header {
+  position:       fixed;
+  top:            0;
+  left:           0;
+  width:          100%;
+  height:         0;              /* no height — children float free  */
+  pointer-events: none;
+  background:     transparent;
+  z-index:        90;
+}
+
+/* Dissolve layout wrappers so they don't interfere */
+.header-row,
+.header-right {
+  display:  contents;
+  position: static;
+}
+
+
+
+
+/* ============================================================
+   BURGER BUTTON
+   Square icon button that opens the side drawer.
+
+   MOVE IT  →  change top / left
+   RESIZE   →  change width / height  (icon scales automatically)
+   ============================================================ */
+
+.burger-btn {
+  /* POSITION — change these to move the button */
+  position: fixed;
+  top:      34px;                  /* distance from top of screen    */
+  left:     18px;                  /* distance from left of screen   */
+
+  /* SIZE — change these to resize */
+  width:    44px;
+  height:   44px;
+
+  /* APPEARANCE */
+  background:      var(--rose);
+  border:          none;
+  border-radius:   var(--r-md);
+  color:           white;
+  cursor:          pointer;
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  box-shadow:      var(--shadow-sm);
+  pointer-events:  auto;
+  z-index:         100;
+  transition:
+    background var(--dur-fast),
+    transform  var(--dur-fast) var(--ease-spring);
+}
+
+.burger-btn:active {
+  background: var(--rose-dark);
+  transform:  scale(0.92);
+}
+
+.burger-btn svg {
+  width:          20px;            /* icon size inside button        */
+  height:         20px;
+  stroke:         white;
+  fill:           none;
+  stroke-width:   2.2;
+  stroke-linecap: round;
 }
 
 
@@ -259,13 +296,19 @@ body {
 
 /* ============================================================
    DATE WIDGET
-   Compact rose pill top-right showing current date. Display only.
-   \u2014 Position: controlled by .header-row flex layout
-   \u2014 Size: set by padding (6px 12px 8px)
-   \u2014 Color: var(--rose) background, white text
+   Compact rose pill showing current date. Display only.
+
+   MOVE IT  →  change top / left
+   RESIZE   →  change padding or font sizes inside
    ============================================================ */
 
 .date-widget {
+  /* POSITION — change these to move the widget */
+  position: fixed;
+  top:      14px;                  /* distance from top of screen    */
+  left:     70px;                  /* distance from left of screen   */
+
+  /* APPEARANCE */
   background:      var(--rose);
   border-radius:   var(--r-lg);
   padding:         6px 12px 8px;
@@ -273,7 +316,6 @@ body {
   flex-direction:  column;
   justify-content: center;
   gap:             1px;
-  flex-shrink:     0;
   pointer-events:  none;
   cursor:          default;
   user-select:     none;
@@ -281,11 +323,12 @@ body {
     4px  4px  0px 0px #7a8c8a,
     8px  8px  0px 0px rgba(107,124,122,0.55),
     0 4px 12px rgba(0,0,0,0.18);
-  color:           white;
-  text-align:      left;
+  color:      white;
+  text-align: left;
+  z-index:    100;
 }
 
-/* Date widget \u2014 top line (e.g. "FRI 20 MAR") */
+/* Top line — e.g. "FRI 20 MAR" */
 .date-widget-date {
   font-size:      9px;
   font-weight:    500;
@@ -295,7 +338,7 @@ body {
   white-space:    nowrap;
 }
 
-/* Date widget \u2014 day name (e.g. "Friday") */
+/* Day name — e.g. "Friday" */
 .date-widget-day {
   font-family:    var(--font-display);
   font-size:      15px;
@@ -312,31 +355,42 @@ body {
 
 /* ============================================================
    THEME TOGGLE
-   Light/dark mode toggle switch in the top-right header area.
-   \u2014 Size: track is 58\u00d730px, knob is 22\u00d722px
-   \u2014 Position: inside .header-right flex row
+   Light/dark mode switch.
+
+   MOVE IT  →  change top / right (or swap to left)
+   RESIZE   →  change width on .toggle-track and translateX on .toggle-track.on
    ============================================================ */
 
-/* Outer track (the pill background) */
 .toggle-track {
-  width:         58px;
-  height:        30px;
-  background:    rgba(30,30,30,0.50);
-  border-radius: var(--r-full);
-  border:        1.5px solid rgba(255,255,255,0.14);
-  cursor:        pointer;
-  position:      relative;
-  transition:    background var(--dur-med) var(--ease-std);
+  /* POSITION — change these to move the toggle */
+  position: fixed;
+  top:      21px;                  /* distance from top of screen    */
+  right:    18px;                  /* distance from right of screen  */
+
+  /* SIZE */
+  width:  58px;                    /* track width                    */
+  height: 30px;                    /* track height                   */
+
+  /* APPEARANCE */
+  background:     rgba(30,30,30,0.50);
+  border-radius:  var(--r-full);
+  border:         1.5px solid rgba(255,255,255,0.14);
+  cursor:         pointer;
+  pointer-events: auto;
+  z-index:        100;
+  transition:     background var(--dur-med) var(--ease-std);
 }
 
 .toggle-track.on {
   background: rgba(182,141,147,0.65);
 }
 
-/* Sliding knob inside the track */
 .toggle-knob {
-  width:          22px;
-  height:         22px;
+  /* SIZE */
+  width:  22px;                    /* knob diameter                  */
+  height: 22px;
+
+  /* APPEARANCE */
   background:     var(--rose-light);
   border-radius:  var(--r-full);
   position:       absolute;
@@ -347,6 +401,7 @@ body {
   pointer-events: none;
 }
 
+/* Slide distance = track width (58) - knob width (22) - left offset (3) - right offset (3) */
 .toggle-track.on .toggle-knob {
   transform: translateX(28px);
 }
@@ -356,21 +411,34 @@ body {
 
 /* ============================================================
    APP TITLE
-   Large italic heading "Mak\u00e9" displayed in the header centre.
-   \u2014 Font size: 52px (change here to resize)
-   \u2014 Position: centred via text-align and parent flex column
+   Large italic heading ("Maké") displayed over the canvas.
+
+   MOVE IT  →  change top (vertical) and left/right for horizontal
+   RESIZE   →  change font-size
+   CENTER   →  keep left:0, width:100%, text-align:center (default)
+   CUSTOM X →  remove width:100%, set left to a pixel value
    ============================================================ */
 
 .app-title {
+  /* POSITION — change these to move the title */
+  position: fixed;
+  top:      64px;                  /* distance from top of screen    */
+  left:     0;                     /* left edge anchor               */
+
+  /* SIZE */
+  width:     100%;                 /* full width for centred layout  */
+  font-size: 52px;                 /* title text size                */
+
+  /* APPEARANCE */
   font-family:    var(--font-display);
-  font-size:      52px;
   font-weight:    700;
   font-style:     italic;
   color:          white;
   letter-spacing: -1.5px;
   line-height:    1;
   text-align:     center;
-  margin-top:     -4px;
+  pointer-events: none;
+  z-index:        90;
 }
 
 
@@ -378,62 +446,28 @@ body {
 
 /* ============================================================
    APP SUBTITLE
-   Smaller text line directly below the app title.
-   \u2014 Font size: 16px
-   \u2014 Spacing: margin-top 3px, margin-bottom 2px
+   Smaller tagline below the title.
+
+   MOVE IT  →  change top / left
+   RESIZE   →  change font-size
    ============================================================ */
 
 .app-subtitle {
-  font-size:     16px;
-  font-weight:   400;
-  color:         rgba(255,255,255,0.88);
-  text-align:    center;
-  margin-top:    3px;
-  margin-bottom: 2px;
-}
+  /* POSITION — change these to move the subtitle */
+  position: fixed;
+  top:      122px;                 /* distance from top of screen    */
+  left:     0;
 
+  /* SIZE */
+  width:     100%;
+  font-size: 16px;
 
-
-
-/* ============================================================
-   BURGER BUTTON
-   Square icon button top-left of the header. Opens the drawer.
-   \u2014 Size: 44\u00d744px (change width/height to resize)
-   \u2014 Position: sits inside .header-row, flex start
-   \u2014 Color: var(--rose) background
-   \u2014 Icon: 20\u00d720px SVG stroked white
-   ============================================================ */
-
-.burger-btn {
-  width:         44px;
-  height:        44px;
-  background:    var(--rose);
-  border:        none;
-  border-radius: var(--r-md);
-  color:         white;
-  cursor:        pointer;
-  display:       flex;
-  align-items:   center;
-  justify-content: center;
-  transition:
-    background var(--dur-fast),
-    transform  var(--dur-fast) var(--ease-spring);
-  box-shadow:    var(--shadow-sm);
-  flex-shrink:   0;
-}
-
-.burger-btn:active {
-  background: var(--rose-dark);
-  transform:  scale(0.92);
-}
-
-.burger-btn svg {
-  width:          20px;
-  height:         20px;
-  stroke:         white;
-  fill:           none;
-  stroke-width:   2.2;
-  stroke-linecap: round;
+  /* APPEARANCE */
+  font-weight:    400;
+  color:          rgba(255,255,255,0.88);
+  text-align:     center;
+  pointer-events: none;
+  z-index:        90;
 }
 
 
@@ -441,15 +475,24 @@ body {
 
 /* ============================================================
    CANVAS
-   The main content area between header and bottom nav.
-   Fills all remaining vertical space via flex:1.
+   The card content area. Four values control its boundaries.
+
+   top    →  where the card area starts (below header)
+   bottom →  where it ends (above bottom nav)
+   left   →  left edge
+   right  →  right edge
    ============================================================ */
 
 .canvas {
-  flex:      1;
-  position:  relative;
-  overflow:  hidden;
-  min-height: 0;
+  /* BOUNDS — change these to reshape the card area */
+  position: fixed;
+  top:      152px;                 /* card area top edge             */
+  bottom:   88px;                  /* card area bottom edge          */
+  left:     0;                     /* card area left edge            */
+  right:    0;                     /* card area right edge           */
+
+  overflow: hidden;
+  z-index:  10;
 }
 
 
@@ -457,8 +500,8 @@ body {
 
 /* ============================================================
    GRID LAYER
-   Scrollable inner container inside .canvas that holds cards.
-   \u2014 Padding: 6px 12px 24px (adjust to move grid inset)
+   Scrollable inner wrapper inside the canvas.
+   Fills canvas entirely. Adjust padding for card inset.
    ============================================================ */
 
 .grid-layer {
@@ -466,7 +509,7 @@ body {
   inset:      0;
   overflow-y: auto;
   overflow-x: hidden;
-  padding:    6px 12px 24px;
+  padding:    6px 12px 24px;       /* inner padding around card grid */
   -webkit-overflow-scrolling: touch;
 }
 
@@ -475,15 +518,16 @@ body {
 
 /* ============================================================
    CARD GRID
-   CSS grid layout for the note cards.
-   \u2014 Columns: 3 equal columns (change repeat(3,1fr) to resize)
-   \u2014 Gap: 10px between cards
+   CSS grid layout for note cards.
+
+   COLUMNS →  change repeat(3, 1fr) — e.g. repeat(2, 1fr) for 2
+   GAP     →  space between cards
    ============================================================ */
 
 .grid {
   display:               grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap:                   10px;
+  grid-template-columns: repeat(3, 1fr);  /* number of columns      */
+  gap:                   10px;            /* gap between cards       */
   align-content:         start;
 }
 
@@ -492,21 +536,20 @@ body {
 
 /* ============================================================
    CARD BASE
-   Individual note/entry card. Dark background tile.
-   \u2014 Size: min-height 170px, width auto (fills grid column)
-   \u2014 Color: var(--dark-card) background
-   \u2014 Radius: var(--r-lg)
-   \u2014 Padding: 11px 11px 9px
+   Individual note/entry tile.
+
+   SIZE →  change min-height for minimum card height
    ============================================================ */
 
 .card {
+  min-height:    170px;            /* minimum card height            */
+
   background:    var(--dark-card);
   border:        1.5px solid rgba(255,255,255,0.09);
   border-radius: var(--r-lg);
   padding:       11px 11px 9px;
   box-shadow:    0 3px 10px rgba(0,0,0,0.25);
   cursor:        pointer;
-  min-height:    170px;
   display:       flex;
   flex-direction: column;
   gap:           4px;
@@ -537,7 +580,7 @@ body {
 
 /* ============================================================
    CARD HEADER
-   Top section of each card. Contains type badge + label.
+   Top section — type badge + label text.
    ============================================================ */
 
 .card-header {
@@ -549,25 +592,23 @@ body {
   flex-shrink:    0;
 }
 
-/* Small rose icon indicating card type */
 .card-type-badge {
-  width:      13px;
-  height:     13px;
-  color:      var(--rose);
+  width:       13px;
+  height:      13px;
+  color:       var(--rose);
   flex-shrink: 0;
 }
 
 .card-type-badge svg {
-  width:            100%;
-  height:           100%;
-  stroke:           currentColor;
-  fill:             none;
-  stroke-width:     2;
-  stroke-linecap:   round;
-  stroke-linejoin:  round;
+  width:           100%;
+  height:          100%;
+  stroke:          currentColor;
+  fill:            none;
+  stroke-width:    2;
+  stroke-linecap:  round;
+  stroke-linejoin: round;
 }
 
-/* Card type text label (e.g. "Note", "Task") */
 .card-type-label {
   font-size:     10.5px;
   font-weight:   600;
@@ -583,23 +624,24 @@ body {
 
 /* ============================================================
    CARD CONTENT
-   Main body text area of the card. Monospace, clamped lines.
-   \u2014 Font: var(--font-mono), 10px
-   \u2014 Max lines: 9 (-webkit-line-clamp: 9)
+   Body text area of the card.
+
+   font-size          →  body text size
+   -webkit-line-clamp →  max lines before truncation
    ============================================================ */
 
 .card-content {
-  color:                rgba(255,255,255,0.56);
-  font-size:            10px;
-  font-family:          var(--font-mono);
-  line-height:          1.65;
-  flex:                 1;
-  overflow:             hidden;
-  display:              -webkit-box;
-  -webkit-line-clamp:   9;
-  -webkit-box-orient:   vertical;
-  word-break:           break-word;
-  white-space:          pre-wrap;
+  color:              rgba(255,255,255,0.56);
+  font-size:          10px;
+  font-family:        var(--font-mono);
+  line-height:        1.65;
+  flex:               1;
+  overflow:           hidden;
+  display:            -webkit-box;
+  -webkit-line-clamp: 9;
+  -webkit-box-orient: vertical;
+  word-break:         break-word;
+  white-space:        pre-wrap;
 }
 
 
@@ -607,7 +649,7 @@ body {
 
 /* ============================================================
    CARD META
-   Bottom bar of each card. Contains timestamp + favourite icon.
+   Bottom bar — timestamp + favourite button.
    ============================================================ */
 
 .card-meta {
@@ -620,7 +662,6 @@ body {
   flex-shrink: 0;
 }
 
-/* Timestamp text bottom-left of card */
 .card-meta-time {
   font-size:     9px;
   color:         rgba(255,255,255,0.26);
@@ -635,14 +676,15 @@ body {
 
 /* ============================================================
    CARD FAVORITE BUTTON
-   Small heart icon button bottom-right of each card.
-   \u2014 Size: 18\u00d718px tap target, 11\u00d711px icon
-   \u2014 Active state: rose color + fill
+   Heart icon bottom-right of card.
+
+   SIZE →  change width / height (tap target)
    ============================================================ */
 
 .card-fav {
-  width:       18px;
+  width:       18px;               /* tap target size                */
   height:      18px;
+
   background:  none;
   border:      none;
   cursor:      pointer;
@@ -657,16 +699,11 @@ body {
   flex-shrink: 0;
 }
 
-.card-fav:active {
-  transform: scale(0.78);
-}
-
-.card-fav.active {
-  color: var(--rose);
-}
+.card-fav:active    { transform: scale(0.78); }
+.card-fav.active    { color: var(--rose); }
 
 .card-fav svg {
-  width:           11px;
+  width:           11px;           /* icon size                      */
   height:          11px;
   stroke:          currentColor;
   fill:            none;
@@ -675,43 +712,40 @@ body {
   stroke-linejoin: round;
 }
 
-.card-fav.active svg {
-  fill: var(--rose);
-}
+.card-fav.active svg { fill: var(--rose); }
 
 
 
 
 /* ============================================================
    CARD TAGS
-   Row of hashtag chips displayed at the bottom of a card.
+   Hashtag chips at the bottom of a card.
    ============================================================ */
 
 .card-tags {
-  display:    flex;
-  flex-wrap:  wrap;
-  gap:        3px;
+  display:     flex;
+  flex-wrap:   wrap;
+  gap:         3px;
   padding-top: 3px;
 }
 
-/* Individual tag pill (e.g. #work, #idea) */
 .tag-chip {
-  display:      inline-flex;
-  align-items:  center;
-  padding:      1px 5px;
+  display:       inline-flex;
+  align-items:   center;
+  padding:       1px 5px;
   border-radius: var(--r-full);
-  background:   rgba(182,141,147,0.16);
-  border:       1px solid rgba(182,141,147,0.28);
-  color:        rgba(255,255,255,0.58);
-  font-size:    9px;
-  font-weight:  500;
-  white-space:  nowrap;
+  background:    rgba(182,141,147,0.16);
+  border:        1px solid rgba(182,141,147,0.28);
+  color:         rgba(255,255,255,0.58);
+  font-size:     9px;
+  font-weight:   500;
+  white-space:   nowrap;
 }
 
 .tag-chip::before {
-  content:       '#';
-  opacity:       0.5;
-  margin-right:  1px;
+  content:      '#';
+  opacity:      0.5;
+  margin-right: 1px;
 }
 
 
@@ -719,8 +753,7 @@ body {
 
 /* ============================================================
    EMPTY STATE
-   Shown in place of cards when the grid has no content.
-   \u2014 Layout: centred column, full grid width
+   Shown when no cards exist.
    ============================================================ */
 
 .empty-state {
@@ -735,13 +768,7 @@ body {
   animation:       fade-in var(--dur-med) ease both;
 }
 
-/* Large centred icon */
-.empty-icon {
-  width:   42px;
-  height:  42px;
-  opacity: 0.45;
-  color:   white;
-}
+.empty-icon { width: 42px; height: 42px; opacity: 0.45; color: white; }
 
 .empty-icon svg {
   width:           100%;
@@ -753,31 +780,17 @@ body {
   stroke-linejoin: round;
 }
 
-/* Heading text */
-.empty-title {
-  font-size:   16px;
-  font-weight: 500;
-  color:       rgba(255,255,255,0.58);
-}
-
-/* Hint / instruction text */
-.empty-hint {
-  font-size:   13px;
-  color:       rgba(255,255,255,0.38);
-  line-height: 1.5;
-}
-
-.empty-hint strong {
-  color: rgba(255,255,255,0.55);
-}
+.empty-title { font-size: 16px; font-weight: 500; color: rgba(255,255,255,0.58); }
+.empty-hint  { font-size: 13px; color: rgba(255,255,255,0.38); line-height: 1.5; }
+.empty-hint strong { color: rgba(255,255,255,0.55); }
 
 
 
 
 /* ============================================================
    STICKY LAYER
-   Invisible absolutely-positioned container for sticky notes.
-   Sits on top of cards, passes pointer events to sticky notes.
+   Transparent overlay inside canvas that holds sticky notes.
+   Fills canvas automatically — no need to change this.
    ============================================================ */
 
 .sticky-layer {
@@ -792,87 +805,60 @@ body {
 
 /* ============================================================
    STICKY NOTE
-   Draggable/resizable coloured note tile placed on the canvas.
-   \u2014 Min size: 130\u00d7106px (change min-width/min-height)
-   \u2014 Position: set via inline style top/left when dragged
-   \u2014 Rotation: set via --sticky-r CSS variable inline
+   Draggable coloured note placed on the canvas.
+
+   SIZE     →  change min-width / min-height
+   POSITION →  set via inline style top/left when dragged
+   ROTATION →  set via --sticky-r CSS variable inline
    ============================================================ */
 
 .sticky-note {
-  position:        absolute;
-  min-width:       130px;
-  min-height:      106px;
-  border-radius:   var(--r-md);
-  padding:         9px 10px 10px;
-  box-shadow:
-    var(--shadow-md),
-    0 1px 3px rgba(0,0,0,0.12);
-  color:           #2a2a2a;
-  pointer-events:  auto;
-  cursor:          move;
-  z-index:         60;
-  display:         flex;
-  flex-direction:  column;
-  transform:       rotate(var(--sticky-r, 0deg));
-  transition:      box-shadow var(--dur-fast) var(--ease-std);
+  position:       absolute;
+  min-width:      130px;           /* minimum sticky width           */
+  min-height:     106px;           /* minimum sticky height          */
+  border-radius:  var(--r-md);
+  padding:        9px 10px 10px;
+  box-shadow:     var(--shadow-md), 0 1px 3px rgba(0,0,0,0.12);
+  color:          #2a2a2a;
+  pointer-events: auto;
+  cursor:         move;
+  z-index:        60;
+  display:        flex;
+  flex-direction: column;
+  transform:      rotate(var(--sticky-r, 0deg));
+  transition:     box-shadow var(--dur-fast) var(--ease-std);
 }
 
-/* Elevated shadow while being dragged */
-.sticky-note.dragging {
-  box-shadow: var(--shadow-xl);
-  z-index:    100;
-}
+.sticky-note.dragging { box-shadow: var(--shadow-xl); z-index: 100; }
 
-/* Drop bounce animation */
 @keyframes sticky-drop {
   0%   { transform: scale(1.08) rotate(var(--sticky-r,0deg)); opacity: 0.7; }
   55%  { transform: scale(0.96) rotate(var(--sticky-r,0deg)); }
   80%  { transform: scale(1.02) rotate(var(--sticky-r,0deg)); }
   100% { transform: scale(1)    rotate(var(--sticky-r,0deg)); opacity: 1; }
 }
+.sticky-dropped { animation: sticky-drop 400ms cubic-bezier(0.33,0.0,0.40,1.0) both; }
 
-.sticky-dropped {
-  animation: sticky-drop 400ms cubic-bezier(0.33,0.0,0.40,1.0) both;
-}
-
-/* Delete fade animation */
 @keyframes sticky-del {
   from { opacity: 1; transform: scale(1)    rotate(var(--sticky-r,0deg)); }
   to   { opacity: 0; transform: scale(0.85) rotate(var(--sticky-r,0deg)); }
 }
+.sticky-deleting { animation: sticky-del 200ms ease both; }
 
-.sticky-deleting {
-  animation: sticky-del 200ms ease both;
-}
-
-/* Top bar of sticky note holding the delete button */
 .sticky-header {
-  display:       flex;
+  display:         flex;
   justify-content: flex-end;
-  margin-bottom: 3px;
-  flex-shrink:   0;
+  margin-bottom:   3px;
+  flex-shrink:     0;
 }
 
-/* \u2715 button to delete a sticky note */
 .sticky-delete {
-  background:    rgba(0,0,0,0.12);
-  border:        none;
-  border-radius: var(--r-full);
-  width:         18px;
-  height:        18px;
-  font-size:     9px;
-  color:         rgba(0,0,0,0.5);
-  cursor:        pointer;
-  display:       flex;
-  align-items:   center;
-  justify-content: center;
+  background: rgba(0,0,0,0.12); border: none; border-radius: var(--r-full);
+  width: 18px; height: 18px; font-size: 9px; color: rgba(0,0,0,0.5);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
 }
+.sticky-delete:active { background: rgba(0,0,0,0.22); }
 
-.sticky-delete:active {
-  background: rgba(0,0,0,0.22);
-}
-
-/* Editable text area inside sticky note */
 .sticky-note textarea {
   flex:        1;
   background:  transparent;
@@ -889,12 +875,9 @@ body {
   cursor:      text;
   width:       100%;
 }
+.sticky-note textarea::placeholder { color: rgba(0,0,0,0.32); }
 
-.sticky-note textarea::placeholder {
-  color: rgba(0,0,0,0.32);
-}
-
-/* Drag handle in bottom-right corner for resizing */
+/* Resize grip bottom-right corner */
 .resize-handle {
   position:      absolute;
   bottom:        4px;
@@ -908,53 +891,49 @@ body {
   opacity:       0.5;
   transition:    opacity var(--dur-fast);
 }
-
-.sticky-note:hover .resize-handle {
-  opacity: 1;
-}
+.sticky-note:hover .resize-handle { opacity: 1; }
 
 
 
 
 /* ============================================================
    ADD MENU
-   Floating popup that appears above FAB with "add" options.
-   \u2014 Position: bottom 74px, horizontally centred
-   \u2014 Width: min 210px
-   \u2014 Z-index: 250
+   Popup listing things you can add (notes, stickies, etc).
+
+   MOVE IT  →  change bottom / left
+   RESIZE   →  change min-width
    ============================================================ */
 
 .add-menu {
-  position:        absolute;
-  bottom:          74px;
-  left:            50%;
-  transform:       translateX(-50%);
-  background:      var(--dark-modal);
-  border:          1px solid rgba(255,255,255,0.11);
-  border-radius:   var(--r-2xl);
-  padding:         var(--sp-4);
-  display:         flex;
-  flex-direction:  column;
-  gap:             var(--sp-3);
-  z-index:         250;
-  min-width:       210px;
-  box-shadow:      var(--shadow-xl);
+  /* POSITION — change these to move the menu */
+  position:  fixed;
+  bottom:    100px;                /* distance from bottom of screen */
+  left:      50%;                  /* horizontal anchor              */
+  transform: translateX(-50%);    /* centres on the left value      */
+
+  /* SIZE */
+  min-width: 210px;
+
+  /* APPEARANCE */
+  background:     var(--dark-modal);
+  border:         1px solid rgba(255,255,255,0.11);
+  border-radius:  var(--r-2xl);
+  padding:        var(--sp-4);
+  display:        flex;
+  flex-direction: column;
+  gap:            var(--sp-3);
+  z-index:        250;
+  box-shadow:     var(--shadow-xl);
 }
 
-.add-menu.hidden {
-  display: none;
-}
+.add-menu.hidden { display: none; }
 
 @keyframes menu-up {
   from { opacity: 0; transform: translateX(-50%) translateY(12px); }
   to   { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
+.add-menu:not(.hidden) { animation: menu-up var(--dur-med) var(--ease-spring) both; }
 
-.add-menu:not(.hidden) {
-  animation: menu-up var(--dur-med) var(--ease-spring) both;
-}
-
-/* Each row inside the add menu (e.g. "New Note", "Sticky") */
 .add-menu-item {
   display:       flex;
   align-items:   center;
@@ -971,20 +950,11 @@ body {
   width:         100%;
   transition:    background var(--dur-fast);
 }
-
-.add-menu-item:active {
-  background: rgba(182,141,147,0.25);
-}
+.add-menu-item:active { background: rgba(182,141,147,0.25); }
 
 .add-menu-item svg {
-  width:           17px;
-  height:          17px;
-  stroke:          var(--rose);
-  fill:            none;
-  stroke-width:    1.9;
-  stroke-linecap:  round;
-  stroke-linejoin: round;
-  flex-shrink:     0;
+  width: 17px; height: 17px; stroke: var(--rose); fill: none;
+  stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0;
 }
 
 
@@ -992,28 +962,44 @@ body {
 
 /* ============================================================
    BOTTOM NAV
-   Fixed navigation bar at the bottom of the screen.
-   \u2014 Height: driven by padding (8px top, 22px bottom)
-   \u2014 Background: var(--sage-deeper)
-   \u2014 Z-index: 200
+   Navigation bar at the bottom of the screen.
+
+   MOVE IT  →  change bottom / left / right
+   HEIGHT   →  change padding values (top/bottom)
+   WIDTH    →  change left + right to narrow it
    ============================================================ */
 
 .bottom-nav {
+  /* POSITION — change these to move the entire nav bar */
+  position: fixed;
+  bottom:   0;                     /* distance from bottom of screen */
+  left:     0;                     /* left edge of bar               */
+  right:    0;                     /* right edge of bar              */
+
+  /* APPEARANCE */
   display:         flex;
   align-items:     center;
   justify-content: space-around;
-  padding:         8px 16px 22px;
+  padding:         8px 16px 22px;  /* top / sides / bottom padding   */
   background:      var(--sage-deeper);
   border-top:      1.5px solid rgba(255,255,255,0.13);
-  flex-shrink:     0;
-  position:        relative;
   z-index:         200;
 }
 
-/* Standard icon button in the nav bar */
+
+
+
+/* ============================================================
+   NAV BUTTONS
+   Icon buttons distributed inside the bottom nav.
+
+   SIZE →  change width / height
+   ============================================================ */
+
 .nav-btn {
-  width:         48px;
-  height:        48px;
+  width:  48px;                    /* tap target width               */
+  height: 48px;                    /* tap target height              */
+
   background:    none;
   border:        none;
   cursor:        pointer;
@@ -1023,22 +1009,16 @@ body {
   border-radius: var(--r-md);
   color:         rgba(255,255,255,0.52);
   transition:
-    color       var(--dur-fast),
-    background  var(--dur-fast),
-    transform   350ms var(--ease-spring);
+    color      var(--dur-fast),
+    background var(--dur-fast),
+    transform  350ms var(--ease-spring);
 }
 
-.nav-btn:active {
-  transform:  scale(0.88);
-  background: rgba(255,255,255,0.08);
-}
-
-.nav-btn.active {
-  color: white;
-}
+.nav-btn:active { transform: scale(0.88); background: rgba(255,255,255,0.08); }
+.nav-btn.active { color: white; }
 
 .nav-btn svg {
-  width:           24px;
+  width:           24px;           /* icon size                      */
   height:          24px;
   stroke:          currentColor;
   fill:            none;
@@ -1052,40 +1032,44 @@ body {
 
 /* ============================================================
    FAB BUTTON
-   Centre rose action button in the bottom nav (floating effect).
-   \u2014 Size: 52\u00d752px (change width/height)
-   \u2014 Position: sits in bottom-nav flex row, margin-top: -10px lifts it
-   \u2014 Color: var(--rose)
-   \u2014 Shadow: 3px offset echo + drop shadow
+   Centre rose action button inside the nav bar.
+
+   SIZE       →  change width / height
+   LIFT       →  change margin-top (more negative = higher lift)
+   MOVE LEFT  →  the FAB sits inside the nav flex row.
+                 To place it freely anywhere, change to:
+                 position: fixed; bottom: Xpx; left: Xpx;
+                 and remove it from the nav bar HTML.
    ============================================================ */
 
 .nav-btn-fab {
-  width:          52px;
-  height:         52px;
-  background:     var(--rose);
-  border:         none;
-  border-radius:  var(--r-xl);
-  cursor:         pointer;
-  display:        flex;
-  align-items:    center;
+  /* SIZE */
+  width:  52px;                    /* FAB width                      */
+  height: 52px;                    /* FAB height                     */
+
+  /* LIFT above nav bar */
+  margin-top: -10px;               /* negative = lifts above the bar */
+
+  /* APPEARANCE */
+  background:    var(--rose);
+  border:        none;
+  border-radius: var(--r-xl);
+  cursor:        pointer;
+  display:       flex;
+  align-items:   center;
   justify-content: center;
-  color:          white;
-  margin-top:     -10px;
-  box-shadow:
-    3px 3px 0px var(--rose-dark),
-    var(--shadow-md);
+  color:         white;
+  box-shadow:    3px 3px 0px var(--rose-dark), var(--shadow-md);
   transition:
-    transform    350ms var(--ease-spring),
-    background   var(--dur-fast),
-    box-shadow   var(--dur-fast);
+    transform  350ms var(--ease-spring),
+    background var(--dur-fast),
+    box-shadow var(--dur-fast);
 }
 
 .nav-btn-fab:active {
   transform:  scale(0.88) translate(2px, 2px);
   background: var(--rose-dark);
-  box-shadow:
-    1px 1px 0px var(--rose-dark),
-    var(--shadow-sm);
+  box-shadow: 1px 1px 0px var(--rose-dark), var(--shadow-sm);
 }
 
 .nav-btn-fab svg {
@@ -1120,52 +1104,41 @@ body {
 
 /* ============================================================
    DRAWER
-   Left-side slide-in panel (navigation/settings).
-   \u2014 Width: min(290px, 84vw) \u2014 change 290px to resize
-   \u2014 Position: fixed left edge, full height
-   \u2014 Z-index: 700 (above overlay)
+   Left-side slide-in panel.
+
+   WIDTH →  change 290px to resize the drawer
    ============================================================ */
 
 .drawer {
-  position:        fixed;
-  top:             0;
-  left:            0;
-  width:           min(290px, 84vw);
-  height:          100dvh;
-  background:      var(--dark-drawer);
-  border-right:    1px solid rgba(255,255,255,0.09);
-  z-index:         700;
-  display:         flex;
-  flex-direction:  column;
-  padding-bottom:  24px;
-  box-shadow:      var(--shadow-xl);
+  position: fixed;
+  top:      0;
+  left:     0;
+  width:    min(290px, 84vw);      /* drawer width                   */
+  height:   100dvh;
+
+  background:     var(--dark-drawer);
+  border-right:   1px solid rgba(255,255,255,0.09);
+  z-index:        700;
+  display:        flex;
+  flex-direction: column;
+  padding-bottom: 24px;
+  box-shadow:     var(--shadow-xl);
 }
 
-@keyframes drawer-in  {
-  from { transform: translateX(-100%); }
-  to   { transform: translateX(0); }
-}
+@keyframes drawer-in  { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+@keyframes drawer-out { from { transform: translateX(0); } to { transform: translateX(-100%); } }
 
-@keyframes drawer-out {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-100%); }
-}
-
-.drawer.opening {
-  animation: drawer-in  var(--dur-slow) var(--ease-spring) both;
-}
-
-.drawer.closing {
-  animation: drawer-out var(--dur-med) cubic-bezier(0.4,0,1,1) both;
-}
+.drawer.opening { animation: drawer-in  var(--dur-slow) var(--ease-spring) both; }
+.drawer.closing { animation: drawer-out var(--dur-med)  cubic-bezier(0.4,0,1,1) both; }
 
 
 
 
 /* ============================================================
    DRAWER HEADER
-   Top section of the drawer with app name + subtitle.
-   \u2014 Top padding: 54px (push below status bar)
+   Top section of the drawer with app name.
+
+   padding-top →  increase to push below status bar
    ============================================================ */
 
 .drawer-header {
@@ -1174,7 +1147,6 @@ body {
   flex-shrink:   0;
 }
 
-/* Drawer app/section name */
 .drawer-title {
   font-family:    var(--font-display);
   font-size:      26px;
@@ -1184,28 +1156,18 @@ body {
   letter-spacing: -0.5px;
 }
 
-/* Smaller description below drawer title */
-.drawer-subtitle {
-  font-size:  12px;
-  color:      rgba(255,255,255,0.42);
-  margin-top: 2px;
-}
+.drawer-subtitle { font-size: 12px; color: rgba(255,255,255,0.42); margin-top: 2px; }
 
 
 
 
 /* ============================================================
    DRAWER BODY
-   Scrollable content area of the drawer below the header.
+   Scrollable section list inside the drawer.
    ============================================================ */
 
-.drawer-body {
-  flex:       1;
-  overflow-y: auto;
-  padding:    8px 10px 0;
-}
+.drawer-body { flex: 1; overflow-y: auto; padding: 8px 10px 0; }
 
-/* Section heading inside the drawer (e.g. "TOOLS", "SETTINGS") */
 .drawer-section-label {
   font-size:      10px;
   font-weight:    600;
@@ -1215,19 +1177,14 @@ body {
   padding:        12px 10px 4px;
 }
 
-/* Thin horizontal divider line between drawer sections */
-.drawer-divider {
-  height:     1px;
-  background: rgba(255,255,255,0.07);
-  margin:     4px 12px;
-}
+.drawer-divider { height: 1px; background: rgba(255,255,255,0.07); margin: 4px 12px; }
 
 
 
 
 /* ============================================================
    DRAWER ITEMS
-   Tappable rows inside the drawer for navigation/actions.
+   Tappable rows inside the drawer.
    ============================================================ */
 
 .drawer-item {
@@ -1246,32 +1203,21 @@ body {
   cursor:        pointer;
   transition:    background var(--dur-fast);
 }
-
-.drawer-item:active {
-  background: rgba(255,255,255,0.07);
-}
+.drawer-item:active { background: rgba(255,255,255,0.07); }
 
 .drawer-item svg {
-  width:           18px;
-  height:          18px;
-  stroke:          var(--rose);
-  fill:            none;
-  stroke-width:    1.8;
-  stroke-linecap:  round;
-  stroke-linejoin: round;
-  flex-shrink:     0;
+  width: 18px; height: 18px; stroke: var(--rose); fill: none;
+  stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0;
 }
 
-.drawer-item-label {
-  flex: 1;
-}
+.drawer-item-label { flex: 1; }
 
 
 
 
 /* ============================================================
    DRAWER TOGGLE ROW
-   A row inside the drawer with a label + mini toggle switch.
+   Label + mini toggle switch inside the drawer.
    ============================================================ */
 
 .drawer-toggle-row {
@@ -1283,18 +1229,10 @@ body {
   cursor:          pointer;
   transition:      background var(--dur-fast);
 }
+.drawer-toggle-row:active { background: rgba(255,255,255,0.05); }
 
-.drawer-toggle-row:active {
-  background: rgba(255,255,255,0.05);
-}
+.drawer-toggle-label { font-size: 13px; color: rgba(255,255,255,0.75); }
 
-/* Label text beside the mini toggle */
-.drawer-toggle-label {
-  font-size: 13px;
-  color:     rgba(255,255,255,0.75);
-}
-
-/* Small toggle pill inside a drawer row */
 .mini-toggle {
   width:         42px;
   height:        24px;
@@ -1306,34 +1244,23 @@ body {
   transition:    background var(--dur-med);
   flex-shrink:   0;
 }
+.mini-toggle.on { background: rgba(182,141,147,0.70); }
 
-.mini-toggle.on {
-  background: rgba(182,141,147,0.70);
-}
-
-/* Sliding knob inside mini toggle */
 .mini-toggle-knob {
-  width:          18px;
-  height:         18px;
-  background:     white;
-  border-radius:  var(--r-full);
-  position:       absolute;
-  top:            3px;
-  left:           3px;
-  transition:     transform var(--dur-med) var(--ease-spring);
+  width: 18px; height: 18px; background: white;
+  border-radius: var(--r-full); position: absolute;
+  top: 3px; left: 3px;
+  transition: transform var(--dur-med) var(--ease-spring);
   pointer-events: none;
 }
-
-.mini-toggle.on .mini-toggle-knob {
-  transform: translateX(18px);
-}
+.mini-toggle.on .mini-toggle-knob { transform: translateX(18px); }
 
 
 
 
 /* ============================================================
    MODAL OVERLAY
-   Full-screen darkened backdrop for modals. Fades in on open.
+   Full-screen backdrop for modals.
    ============================================================ */
 
 .modal-overlay {
@@ -1350,29 +1277,22 @@ body {
   transition:          opacity var(--dur-med) ease;
   padding:             16px;
 }
-
-.modal-overlay.open {
-  opacity: 1;
-}
+.modal-overlay.open { opacity: 1; }
 
 @keyframes modal-in {
   from { opacity: 0; transform: scale(0.88) translateY(10px); }
   to   { opacity: 1; transform: scale(1)    translateY(0); }
 }
-
-.modal-overlay.open .modal {
-  animation: modal-in var(--dur-med) var(--ease-spring) both;
-}
+.modal-overlay.open .modal { animation: modal-in var(--dur-med) var(--ease-spring) both; }
 
 
 
 
 /* ============================================================
    MODAL
-   The card panel that appears over the overlay.
-   \u2014 Max width: 480px (change max-width to resize)
-   \u2014 Padding: 22px
-   \u2014 Color: var(--dark-modal) background
+   Content card inside the modal overlay.
+
+   max-width →  change to make modal wider/narrower
    ============================================================ */
 
 .modal {
@@ -1380,32 +1300,20 @@ body {
   border:        1px solid rgba(255,255,255,0.10);
   border-radius: var(--r-2xl);
   width:         100%;
-  max-width:     480px;
+  max-width:     480px;            /* modal maximum width            */
   padding:       22px;
   box-shadow:    var(--shadow-xl);
 }
 
-/* Modal heading text */
-.modal-title {
-  font-size:     20px;
-  font-weight:   600;
-  color:         white;
-  margin-bottom: 16px;
-}
-
-/* Inner content wrapper */
-.modal-content {
-  display:        flex;
-  flex-direction: column;
-  gap:            11px;
-}
+.modal-title { font-size: 20px; font-weight: 600; color: white; margin-bottom: 16px; }
+.modal-content { display: flex; flex-direction: column; gap: 11px; }
 
 
 
 
 /* ============================================================
    MODAL INPUTS
-   Text inputs, textareas and selects inside a modal.
+   Text inputs, textareas, selects inside modals.
    ============================================================ */
 
 .modal-input,
@@ -1426,34 +1334,19 @@ body {
 }
 
 .modal-input:focus,
-.modal-textarea:focus {
-  border-color: rgba(182,141,147,0.55);
-}
-
+.modal-textarea:focus        { border-color: rgba(182,141,147,0.55); }
 .modal-input::placeholder,
-.modal-textarea::placeholder {
-  color: rgba(255,255,255,0.35);
-}
-
-.modal-textarea {
-  resize: vertical;
-}
-
-.modal-select {
-  cursor: pointer;
-}
-
-.modal-select option {
-  background: var(--dark-modal);
-  color:      white;
-}
+.modal-textarea::placeholder { color: rgba(255,255,255,0.35); }
+.modal-textarea              { resize: vertical; }
+.modal-select                { cursor: pointer; }
+.modal-select option         { background: var(--dark-modal); color: white; }
 
 
 
 
 /* ============================================================
    MODAL ACTIONS
-   Button row at the bottom of a modal (confirm/cancel/delete).
+   Button row at the bottom of a modal.
    ============================================================ */
 
 .modal-actions {
@@ -1465,7 +1358,6 @@ body {
   flex-wrap:       wrap;
 }
 
-/* Standard modal button */
 .modal-btn {
   padding:       10px 22px;
   border-radius: var(--r-full);
@@ -1475,76 +1367,345 @@ body {
   font-size:     14px;
   font-family:   var(--font-body);
   cursor:        pointer;
-  transition:
-    background var(--dur-fast),
-    transform  var(--dur-fast);
+  transition:    background var(--dur-fast), transform var(--dur-fast);
 }
-
-.modal-btn:active {
-  transform: scale(0.96);
-}
-
-/* Rose-filled confirm button */
-.modal-btn.primary {
-  background:   var(--rose);
-  border-color: var(--rose);
-}
-
-.modal-btn.primary:active {
-  background: var(--rose-dark);
-}
-
-/* Danger/delete button (rose text, left-aligned) */
-.modal-btn.danger {
-  color:        var(--rose);
-  border-color: rgba(182,141,147,0.28);
-  background:   none;
-  margin-right: auto;
-}
+.modal-btn:active         { transform:    scale(0.96); }
+.modal-btn.primary        { background:   var(--rose); border-color: var(--rose); }
+.modal-btn.primary:active { background:   var(--rose-dark); }
+.modal-btn.danger         { color:        var(--rose); border-color: rgba(182,141,147,0.28); background: none; margin-right: auto; }
 
 
 
 
 /* ============================================================
    COLOR SWATCHES
-   Row of circular colour picker buttons inside modals.
-   \u2014 Swatch size: 32\u00d732px (change width/height)
+   Circular colour pickers inside modals.
+
+   SIZE →  change width / height on .color-swatch
    ============================================================ */
 
-.color-swatch-row {
-  display:   flex;
-  gap:       10px;
-  flex-wrap: wrap;
-  padding:   2px 0;
-}
+.color-swatch-row { display: flex; gap: 10px; flex-wrap: wrap; padding: 2px 0; }
 
 .color-swatch {
-  width:         32px;
+  width:         32px;             /* swatch diameter                */
   height:        32px;
+
   border-radius: var(--r-full);
   cursor:        pointer;
   border:        2.5px solid transparent;
   box-shadow:    var(--shadow-sm);
-  transition:
-    transform    var(--dur-fast) var(--ease-spring),
-    border-color var(--dur-fast);
+  transition:    transform var(--dur-fast) var(--ease-spring), border-color var(--dur-fast);
   background:    none;
   flex-shrink:   0;
 }
-
-.color-swatch:active {
-  transform: scale(0.86);
-}
-
-/* White ring + slight scale when swatch is selected */
-.color-swatch.selected {
-  border-color: white;
-  transform:    scale(1.14);
-}
+.color-swatch:active   { transform: scale(0.86); }
+.color-swatch.selected { border-color: white; transform: scale(1.14); }
 
 
 
 
 /* ============================================================
    SORT MENU POPUP
-   Small popup for selecting sort order (e.g. by date
+   Sort order options popup. Position set by JS.
+
+   min-width →  change to resize
+   ============================================================ */
+
+.sort-menu-popup {
+  position:      fixed;
+  background:    var(--dark-modal);
+  border:        1px solid rgba(255,255,255,0.10);
+  border-radius: var(--r-2xl);
+  padding:       var(--sp-3);
+  min-width:     190px;
+  z-index:       400;
+  box-shadow:    var(--shadow-lg);
+  animation:     popup-in 100ms var(--ease-spring) both;
+}
+
+@keyframes popup-in {
+  from { opacity: 0; transform: scale(0.94) translateY(-4px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0); }
+}
+
+.sort-menu-section-label {
+  font-size: 10px; font-weight: 600; color: rgba(255,255,255,0.35);
+  text-transform: uppercase; letter-spacing: 0.6px; padding: 4px 12px;
+}
+
+.sort-menu-item {
+  width:           100%;
+  padding:         11px 12px;
+  background:      none;
+  border:          none;
+  border-radius:   var(--r-sm);
+  color:           rgba(255,255,255,0.70);
+  font-size:       13px;
+  font-family:     var(--font-body);
+  text-align:      left;
+  cursor:          pointer;
+  display:         flex;
+  align-items:     center;
+  justify-content: space-between;
+  transition:      background 100ms;
+}
+.sort-menu-item:active  { background: rgba(255,255,255,0.07); }
+.sort-menu-item.active  { color: white; font-weight: 500; }
+.sort-dir-indicator     { font-size: 11px; color: var(--rose); }
+
+
+
+
+/* ============================================================
+   SEARCH OVERLAY
+   Full-screen panel that slides up from the bottom.
+   ============================================================ */
+
+.search-overlay {
+  position:       fixed;
+  inset:          0;
+  background:     var(--dark-drawer);
+  z-index:        500;
+  display:        flex;
+  flex-direction: column;
+  overflow:       hidden;
+  transform:      translateY(100%);
+  transition:     transform var(--dur-slow) var(--ease-spring);
+}
+.search-overlay.open { transform: translateY(0); }
+
+
+
+
+/* ============================================================
+   SEARCH BAR
+   Input + cancel row at the top of the search overlay.
+   ============================================================ */
+
+.search-bar {
+  display:       flex;
+  align-items:   center;
+  gap:           10px;
+  padding:       16px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  flex-shrink:   0;
+}
+
+.search-cancel-btn {
+  background: none; border: none; color: rgba(255,255,255,0.6);
+  cursor: pointer; display: flex; align-items: center; padding: 4px;
+}
+.search-cancel-btn svg {
+  width: 22px; height: 22px; stroke: currentColor; fill: none;
+  stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+}
+
+.search-bar input {
+  flex:          1;
+  background:    rgba(255,255,255,0.08);
+  border:        1px solid rgba(255,255,255,0.10);
+  border-radius: var(--r-full);
+  padding:       10px 16px;
+  color:         white;
+  font-size:     15px;
+  font-family:   var(--font-body);
+  outline:       none;
+  user-select:   text;
+  -webkit-user-select: text;
+}
+.search-bar input:focus        { border-color: rgba(182,141,147,0.55); }
+.search-bar input::placeholder { color: rgba(255,255,255,0.35); }
+
+
+
+
+/* ============================================================
+   SEARCH FILTER CHIPS
+   Horizontal category filters below the search bar.
+   ============================================================ */
+
+.search-filter-chips {
+  display: flex; gap: 8px; padding: 12px 16px;
+  overflow-x: auto; flex-shrink: 0; scrollbar-width: none;
+}
+.search-filter-chips::-webkit-scrollbar { display: none; }
+
+.search-filter-chip {
+  padding:       6px 14px;
+  border-radius: var(--r-full);
+  border:        1px solid rgba(255,255,255,0.12);
+  background:    rgba(255,255,255,0.06);
+  color:         rgba(255,255,255,0.65);
+  font-size:     12px;
+  font-family:   var(--font-body);
+  cursor:        pointer;
+  white-space:   nowrap;
+  transition:    background var(--dur-fast), color var(--dur-fast), border-color var(--dur-fast);
+}
+.search-filter-chip.active,
+.search-filter-chip:active {
+  background: rgba(182,141,147,0.25); border-color: rgba(182,141,147,0.55); color: white;
+}
+
+
+
+
+/* ============================================================
+   SEARCH RESULTS
+   Scrollable result list below filters.
+   ============================================================ */
+
+.search-results {
+  flex: 1; overflow-y: auto; padding: 8px 12px 24px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+
+.search-hint,
+.search-empty-msg {
+  display: flex; align-items: center; justify-content: center;
+  padding: 48px 24px; color: rgba(255,255,255,0.38); font-size: 14px; text-align: center;
+}
+
+.search-result-card { min-height: auto !important; cursor: pointer; }
+
+
+
+
+/* ============================================================
+   CONTEXT MENU
+   Right-click / long-press popup. Position set by JS.
+
+   min-width →  change to resize
+   ============================================================ */
+
+.context-menu-overlay { position: fixed; inset: 0; z-index: 399; background: transparent; }
+
+.context-menu {
+  position:      fixed;
+  background:    var(--dark-modal);
+  border:        1px solid rgba(255,255,255,0.10);
+  border-radius: var(--r-md);
+  padding:       4px;
+  min-width:     185px;
+  z-index:       400;
+  box-shadow:    var(--shadow-lg);
+  animation:     popup-in 100ms var(--ease-spring) both;
+}
+
+.context-menu-item {
+  width:         100%;
+  padding:       11px 14px;
+  background:    none;
+  border:        none;
+  border-radius: var(--r-sm);
+  color:         rgba(255,255,255,0.82);
+  font-size:     14px;
+  font-family:   var(--font-body);
+  text-align:    left;
+  cursor:        pointer;
+  display:       flex;
+  align-items:   center;
+  gap:           10px;
+  transition:    background 100ms;
+}
+.context-menu-item:active      { background: rgba(255,255,255,0.07); }
+.context-menu-item.destructive { color: var(--rose); }
+
+.context-menu-divider { height: 1px; background: rgba(255,255,255,0.08); margin: 3px 10px; }
+
+
+
+
+/* ============================================================
+   TOAST BANNER
+   Brief notification above the bottom nav.
+
+   MOVE IT  →  change bottom / left
+   SIZE     →  change padding and font-size
+   ============================================================ */
+
+.toast-banner {
+  /* POSITION — change these to move the toast */
+  position:  fixed;
+  bottom:    100px;                /* distance from bottom of screen */
+  left:      50%;                  /* horizontal anchor              */
+  transform: translateX(-50%);    /* centres on the left value      */
+
+  /* APPEARANCE */
+  display:        flex;
+  align-items:    center;
+  gap:            8px;
+  padding:        10px 20px;
+  border-radius:  var(--r-full);
+  font-size:      13px;
+  z-index:        600;
+  pointer-events: none;
+  white-space:    nowrap;
+  animation:      toast-in var(--dur-med) var(--ease-spring) both;
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(6px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+.toast-banner.success {
+  background: rgba(76,175,125,0.22);
+  border:     1px solid rgba(76,175,125,0.40);
+  color:      #7ec8a4;
+}
+
+.toast-banner.error {
+  background: rgba(182,141,147,0.22);
+  border:     1px solid rgba(182,141,147,0.40);
+  color:      var(--rose-light);
+}
+
+
+
+
+/* ============================================================
+   SCROLLBAR
+   Thin custom scrollbar for webkit.
+
+   width/height →  change to adjust scrollbar thickness
+   ============================================================ */
+
+::-webkit-scrollbar        { width: 3px; height: 3px; }
+::-webkit-scrollbar-track  { background: transparent; }
+::-webkit-scrollbar-thumb  { background: rgba(255,255,255,0.18); border-radius: var(--r-full); }
+
+
+
+
+/* ============================================================
+   KEYFRAMES
+   ============================================================ */
+
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes spin    { to   { transform: rotate(360deg); } }
+
+
+
+
+/* ============================================================
+   UTILITY CLASSES
+   ============================================================ */
+
+.hidden { display: none !important; }
+
+
+
+
+/* ============================================================
+   REDUCED MOTION
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration:  0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
