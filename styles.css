@@ -59,13 +59,16 @@ body{background:var(--sage);color:#fff;font-family:var(--font-body);font-size:14
 .make-loading{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);display:flex;align-items:center;gap:10px;color:rgba(255,255,255,0.5);font-size:14px;}
 .make-loading-spinner{width:20px;height:20px;border:2px solid rgba(255,255,255,0.15);border-top-color:var(--rose);border-radius:var(--r-full);animation:spin 0.7s linear infinite;}
 
-/* ── HEADER ── */
-.app-header{display:flex;flex-direction:column;align-items:center;padding:14px 18px 4px;flex-shrink:0;}
-.header-row{display:flex;align-items:flex-start;justify-content:space-between;width:100%;margin-bottom:2px;}
-.header-right{display:flex;align-items:center;gap:10px;}
+/* ── HEADER (V10) ── */
+/* Date widget now on left; title block + toggle on right. Tighter padding. */
+.app-header{display:flex;flex-direction:column;padding:12px 16px 6px;flex-shrink:0;}
+.header-row{display:flex;align-items:center;justify-content:space-between;width:100%;gap:10px;}
+.header-right{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+/* Title block sits inline right of date widget */
+.header-title-block{display:flex;flex-direction:column;align-items:flex-end;}
 
-/* ── DATE WIDGET ── */
-.date-widget{background:var(--rose);border-radius:var(--r-lg);padding:6px 12px 8px;display:flex;flex-direction:column;justify-content:center;gap:1px;flex-shrink:0;pointer-events:none;cursor:default;user-select:none;box-shadow:4px 4px 0px 0px #7a8c8a,8px 8px 0px 0px rgba(107,124,122,0.55),0 4px 12px rgba(0,0,0,0.18);color:white;text-align:left;}
+/* Date widget — now TOP-LEFT (V10) */
+.date-widget{background:var(--rose);border-radius:var(--r-lg);padding:6px 12px 8px;display:flex;flex-direction:column;justify-content:center;gap:1px;flex-shrink:0;user-select:none;box-shadow:4px 4px 0px 0px #7a8c8a,8px 8px 0px 0px rgba(107,124,122,0.55),0 4px 12px rgba(0,0,0,0.18);color:white;text-align:left;}
 .date-widget-date{font-size:9px;font-weight:500;color:rgba(255,255,255,0.75);letter-spacing:0.3px;line-height:1;white-space:nowrap;}
 .date-widget-day{font-family:var(--font-display);font-size:15px;font-weight:700;font-style:italic;color:white;line-height:1.1;letter-spacing:-0.3px;white-space:nowrap;}
 
@@ -75,18 +78,26 @@ body{background:var(--sage);color:#fff;font-family:var(--font-body);font-size:14
 .toggle-knob{width:22px;height:22px;background:var(--rose-light);border-radius:var(--r-full);position:absolute;top:3px;left:3px;box-shadow:0 2px 5px rgba(0,0,0,0.28);transition:transform var(--dur-med) var(--ease-spring);pointer-events:none;}
 .toggle-track.on .toggle-knob{transform:translateX(28px);}
 
-/* ── TITLE ── */
-.app-title{font-family:var(--font-display);font-size:52px;font-weight:700;font-style:italic;color:white;letter-spacing:-1.5px;line-height:1;text-align:center;margin-top:-4px;}
-.app-subtitle{font-size:16px;font-weight:400;color:rgba(255,255,255,0.88);text-align:center;margin-top:3px;margin-bottom:2px;}
+/* ── TITLE (V10 — right-aligned inline, compact) ── */
+.app-title{font-family:var(--font-display);font-size:38px;font-weight:700;font-style:italic;color:white;letter-spacing:-1.2px;line-height:1;text-align:right;}
+.app-subtitle{font-size:10px;font-weight:400;color:rgba(255,255,255,0.55);text-align:right;margin-top:1px;letter-spacing:0.4px;text-transform:uppercase;}
 
-/* ── BURGER ── */
-.burger-btn{width:44px;height:44px;background:var(--rose);border:none;border-radius:var(--r-md);color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background var(--dur-fast),transform var(--dur-fast) var(--ease-spring);box-shadow:var(--shadow-sm);flex-shrink:0;}
-.burger-btn:active{background:var(--rose-dark);transform:scale(0.92);}
-.burger-btn svg{width:20px;height:20px;stroke:white;fill:none;stroke-width:2.2;stroke-linecap:round;}
+/* ── BURGER — removed from header, now lives in canvas-toolbar ── */
+
+/* ── CANVAS TOOLBAR (V10) ── */
+/* Sits inside grid-layer as the first row, just above cards. */
+.canvas-toolbar{display:flex;align-items:center;gap:8px;padding:4px 0 10px;}
+.canvas-toolbar-btn{width:34px;height:34px;background:var(--rose);border:none;border-radius:var(--r-md);color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow-sm);flex-shrink:0;transition:background var(--dur-fast),transform var(--dur-fast) var(--ease-spring);}
+.canvas-toolbar-btn:active{background:var(--rose-dark);transform:scale(0.92);}
+.canvas-toolbar-btn svg{width:16px;height:16px;stroke:white;fill:none;stroke-width:2.3;stroke-linecap:round;stroke-linejoin:round;}
+.canvas-search-btn{background:rgba(255,255,255,0.14);backdrop-filter:blur(4px);}
+.canvas-search-btn:active{background:rgba(255,255,255,0.22);transform:scale(0.92);}
+.canvas-item-count{flex:1;text-align:center;font-size:11px;font-weight:500;color:rgba(255,255,255,0.36);font-family:var(--font-body);letter-spacing:0.2px;pointer-events:none;}
 
 /* ── CANVAS ── */
 .canvas{flex:1;position:relative;overflow:hidden;min-height:0;}
-.grid-layer{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding:6px 12px 24px;-webkit-overflow-scrolling:touch;}
+/* grid-layer: top padding reduced since canvas-toolbar provides its own spacing */
+.grid-layer{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding:4px 12px 24px;-webkit-overflow-scrolling:touch;}
 
 /* ── CARD GRID ── */
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;align-content:start;}

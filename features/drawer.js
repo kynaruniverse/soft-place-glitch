@@ -172,9 +172,11 @@ export function showDrawer() {
   document.getElementById('drawer-sort').addEventListener('click', () => {
     close();
     setTimeout(async () => {
-      const r = (document.getElementById('burger-btn') || document.body).getBoundingClientRect();
+      // Burger is now in the canvas-toolbar; anchor menu below it
+      const burgerEl = document.getElementById('burger-btn') || document.getElementById('canvas-toolbar') || document.body;
+      const r = burgerEl.getBoundingClientRect();
       const { showSortMenuAt } = await import('./sort-menu.js');
-      showSortMenuAt(r.right - 190, r.bottom + 8);
+      showSortMenuAt(r.left, r.bottom + 8);
     }, 300);
   });
 
