@@ -1,20 +1,20 @@
 /**
- * MAKÉ — app.js (V10)
+ * MAKÉ — app.js (V11)
  *
- * V10 layout changes:
- *   – Date widget → top-left of header (where burger was)
- *   – Burger → canvas-toolbar, just above the first card row
- *   – Canvas-toolbar also holds quick-search + live item count
- *   – Header title block moved right of date widget, more compact
+ * V11 — Data protection:
+ *   – requestPersistence() called on startup: marks storage as protected
+ *     so "Clear browsing data" won't wipe notes on installed PWAs
+ *   – Storage status banner in settings modal shows persistence state
+ *   – autoBackupIfDue() called after every save: writes backup JSON to
+ *     device filesystem every 10 saves (File System Access API)
  *
- * V10 other upgrades:
- *   – Live item-count pill in canvas toolbar updates with state
- *   – Canvas search button opens search instantly (no drawer needed)
- *   – Theme toggle aria-pressed keeps in sync on toggle
+ * V10 layout (retained):
+ *   – Date widget top-left, burger in canvas-toolbar above cards
+ *   – Quick-search button + live item count in canvas toolbar
  */
 
 import { state, loadInitialData }        from './core/state.js';
-import { isUsingFallback }               from './core/storage.js';
+import { isUsingFallback, requestPersistence, getPersistenceState, autoBackupIfDue } from './core/storage.js';
 import { renderCards }                   from './ui/cards.js';
 import { renderStickies }                from './ui/stickies.js';
 import { showNoteEditor }                from './ui/note-editor.js';
@@ -47,6 +47,25 @@ async function init() {
   renderStickies();
   _attachShellListeners();
   _attachGlobalShortcuts();
+
+  // Request persistent storage — protects data from browser clear
+  requestPersistence().then(status => {
+    if (status === 'denied') {
+      // Show a gentle one-time nudge to install the PWA for full protection
+      const shown = localStorage.getItem('make_persist_nudge');
+      if (!shown) {
+        localStorage.setItem('make_persist_nudge', '1');
+        showToast('💡 Install as app for protected storage', false);
+      }
+    }
+  });
+
+  // Hook auto-backup into every state change that involves a save
+  // We expose a global helper so ui modules can call it after saveItem
+  window._makeAutoBackup = async () => {
+    const all = [...state.backgroundItems, ...state.stickyItems];
+    await autoBackupIfDue(all);
+  };
 
   state.subscribe(() => {
     renderCards();

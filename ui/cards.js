@@ -184,6 +184,7 @@ function _attachCardListeners() {
       if (!item) return;
       item.isFavorited = !item.isFavorited;
       upsertItemInState(await saveItem(item));
+      window._makeAutoBackup?.();
     });
   });
 }

@@ -152,20 +152,62 @@ export function showStickyModal() {
 
 // ── Settings modal ────────────────────────────────────────────
 
-export function showSettingsModal() {
+export async function showSettingsModal() {
   const { exportData, importData } = _lazyDataModule();
+
+  // Grab storage info before rendering
+  const { getPersistenceState, getStorageEstimate } = await import('../core/storage.js');
+  const persistState = getPersistenceState();
+  const estimate     = await getStorageEstimate();
+
+  const persistIcon  = persistState === 'granted'     ? '🔒'
+                     : persistState === 'denied'       ? '⚠️'
+                     : persistState === 'unsupported'  ? 'ℹ️'
+                     : '⏳';
+  const persistLabel = persistState === 'granted'     ? 'Protected — safe from browser clear'
+                     : persistState === 'denied'       ? 'Not protected — install as app for safety'
+                     : persistState === 'unsupported'  ? 'Browser doesn\'t support persistence'
+                     : 'Checking…';
+  const persistCls   = persistState === 'granted' ? 'persist-ok' : persistState === 'denied' ? 'persist-warn' : 'persist-info';
+
+  const storageRow = estimate
+    ? `<div class="storage-usage-bar-wrap">
+         <div class="storage-usage-bar" style="width:${Math.min(estimate.percent,100)}%"></div>
+       </div>
+       <div class="storage-usage-label">${estimate.usageStr} used of ${estimate.quotaStr}</div>`
+    : '';
+
   openModal({
     title: 'Settings',
     fields: [],
     actions: [
-      { id: 's-export', label: '↓ Export'  },
-      { id: 's-import', label: '↑ Import'  },
-      { id: 's-close',  label: 'Close', primary: true },
+      { id: 's-export', label: '↓ Export backup' },
+      { id: 's-import', label: '↑ Import backup' },
+      { id: 's-close',  label: 'Done', primary: true },
     ],
     onReady: (overlay, close) => {
+      // Inject storage status above the actions
+      const actionsEl = overlay.querySelector('.modal-actions');
+      const statusEl  = document.createElement('div');
+      statusEl.className = 'storage-status-block';
+      statusEl.innerHTML = `
+        <div class="storage-status-row ${persistCls}">
+          <span class="storage-status-icon">${persistIcon}</span>
+          <div class="storage-status-text">
+            <div class="storage-status-title">Data protection</div>
+            <div class="storage-status-detail">${persistLabel}</div>
+          </div>
+        </div>
+        ${storageRow}
+        <div class="storage-status-hint">
+          Your notes are stored <strong>only on this device</strong>.<br>
+          Use Export to save a backup file you can restore anytime.
+        </div>`;
+      actionsEl.parentNode.insertBefore(statusEl, actionsEl);
+
       overlay.querySelector('#s-close').addEventListener('click', close);
-      overlay.querySelector('#s-export').addEventListener('click', exportData);
-      overlay.querySelector('#s-import').addEventListener('click', importData);
+      overlay.querySelector('#s-export').addEventListener('click', () => { exportData(); close(); });
+      overlay.querySelector('#s-import').addEventListener('click', () => { importData(); close(); });
     },
   });
 }
