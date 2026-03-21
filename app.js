@@ -1,16 +1,14 @@
 /**
- * MAKÉ — app.js (V11)
+ * MAKÉ — app.js (V12)
  *
- * V11 — Data protection:
- *   – requestPersistence() called on startup: marks storage as protected
- *     so "Clear browsing data" won't wipe notes on installed PWAs
- *   – Storage status banner in settings modal shows persistence state
- *   – autoBackupIfDue() called after every save: writes backup JSON to
- *     device filesystem every 10 saves (File System Access API)
+ * V12 — Landing page + onboarding:
+ *   – index.html is now the landing page; app lives in app.html
+ *   – First-run onboarding shown to new users explaining privacy,
+ *     data storage, and prompting to set up the backup file
+ *   – share_target support: incoming shared URLs auto-open link modal
  *
- * V10 layout (retained):
- *   – Date widget top-left, burger in canvas-toolbar above cards
- *   – Quick-search button + live item count in canvas toolbar
+ * V11 (retained): persistence + auto-backup
+ * V10 (retained): date top-left, burger in canvas toolbar
  */
 
 import { state, loadInitialData }        from './core/state.js';
@@ -23,6 +21,7 @@ import { showLinkModal, showStickyModal, showSettingsModal } from './ui/modals.j
 import { showDrawer }                    from './features/drawer.js';
 import { initAmbient }                   from './features/ambient.js';
 import { showToast }                     from './utils/helpers.js';
+import { hasOnboarded, showOnboarding }  from './features/onboarding.js';
 
 const app = document.getElementById('app');
 
@@ -66,6 +65,14 @@ async function init() {
     const all = [...state.backgroundItems, ...state.stickyItems];
     await autoBackupIfDue(all);
   };
+
+  // Handle Web Share Target (PWA share_target in manifest)
+  _handleShareTarget();
+
+  // Show onboarding on first run — awaited so UI is ready first
+  if (!hasOnboarded()) {
+    await showOnboarding();
+  }
 
   state.subscribe(() => {
     renderCards();
@@ -311,3 +318,17 @@ function _syncItemCount() {
 }
 
 init();
+
+// ── Web Share Target ──────────────────────────────────────────
+function _handleShareTarget() {
+  const params = new URLSearchParams(window.location.search);
+  const url    = params.get('url');
+  const title  = params.get('title') || '';
+  const text   = params.get('text')  || '';
+  if (!url && !text) return;
+  window.history.replaceState({}, '', window.location.pathname);
+  setTimeout(() => {
+    if (url) showLinkModal({ url, title: title || text || url });
+    else if (text) showNoteEditor({ content: text, title });
+  }, 600);
+}

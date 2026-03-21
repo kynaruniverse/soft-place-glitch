@@ -430,3 +430,43 @@ body{background:var(--sage);color:#fff;font-family:var(--font-body);font-size:14
 .storage-usage-label{font-size:10px;color:rgba(255,255,255,0.35);text-align:right;}
 .storage-status-hint{font-size:11px;color:rgba(255,255,255,0.35);line-height:1.6;padding:2px 0;}
 .storage-status-hint strong{color:rgba(255,255,255,0.55);}
+
+/* ── ONBOARDING (V12) ────────────────────────────────────────── */
+#onboarding-overlay{position:fixed;inset:0;z-index:2000;background:rgba(26,29,28,0.65);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);display:flex;align-items:flex-end;justify-content:center;opacity:0;transition:opacity 350ms ease;padding:0;}
+#onboarding-overlay.ob-visible{opacity:1;}
+.ob-wrap{background:#fff;border-radius:28px 28px 0 0;width:100%;max-width:520px;padding:32px 28px 36px;position:relative;transform:translateY(40px);transition:transform 400ms cubic-bezier(0.22,0.25,0,1);max-height:92svh;overflow-y:auto;}
+#onboarding-overlay.ob-visible .ob-wrap{transform:translateY(0);}
+.ob-logo{font-family:var(--font-display);font-size:22px;font-style:italic;font-weight:700;color:var(--rose);letter-spacing:-0.5px;margin-bottom:10px;text-align:center;}
+.ob-emoji{font-size:52px;text-align:center;margin-bottom:14px;line-height:1;}
+.ob-title{font-family:var(--font-display);font-size:26px;font-style:italic;font-weight:700;color:var(--dark);letter-spacing:-0.5px;text-align:center;margin-bottom:14px;line-height:1.2;}
+.ob-body{font-size:15px;color:var(--text-2,#4a5552);line-height:1.65;text-align:center;}
+.ob-slide{display:none;flex-direction:column;align-items:center;gap:12px;}
+.ob-slide.active{display:flex;animation:ob-in 300ms cubic-bezier(0.22,0.25,0,1) both;}
+@keyframes ob-in{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+
+/* Privacy cards inside onboarding */
+.ob-privacy-cards{display:flex;flex-direction:column;gap:10px;width:100%;margin:4px 0;}
+.ob-pcard{display:flex;align-items:flex-start;gap:12px;background:rgba(155,165,154,0.08);border:1px solid rgba(155,165,154,0.18);border-radius:14px;padding:14px 16px;font-size:13px;color:var(--text-2,#4a5552);line-height:1.55;text-align:left;}
+.ob-pcard-icon{font-size:20px;flex-shrink:0;margin-top:2px;}
+.ob-pcard strong{color:var(--dark);display:block;margin-bottom:3px;font-size:13.5px;}
+
+/* Backup explainer rows */
+.ob-backup-explainer{display:flex;flex-direction:column;gap:10px;width:100%;margin:4px 0;}
+.ob-be-row{display:flex;align-items:flex-start;gap:12px;background:rgba(182,141,147,0.07);border:1px solid rgba(182,141,147,0.16);border-radius:12px;padding:12px 14px;font-size:13px;color:var(--text-2,#4a5552);line-height:1.5;text-align:left;}
+.ob-be-icon{font-size:18px;flex-shrink:0;margin-top:1px;}
+
+/* Tips on done slide */
+.ob-tips{display:flex;flex-direction:column;gap:8px;width:100%;margin:6px 0;}
+.ob-tip{display:flex;align-items:flex-start;gap:10px;background:rgba(0,0,0,0.03);border-radius:10px;padding:10px 14px;font-size:13px;color:var(--text-2,#4a5552);line-height:1.5;text-align:left;}
+
+/* Buttons */
+.ob-btn-primary{width:100%;padding:15px 20px;background:var(--dark);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:600;font-family:var(--font-body);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background 150ms,transform 150ms var(--ease-spring);margin-top:6px;}
+.ob-btn-primary:hover{background:var(--dark-2,#252928);}
+.ob-btn-primary:active{transform:scale(0.98);}
+.ob-btn-ghost{background:none;border:none;font-size:13px;color:var(--text-3,#8a9896);cursor:pointer;font-family:var(--font-body);padding:8px;transition:color 150ms;}
+.ob-btn-ghost:hover{color:var(--text);}
+
+/* Progress dots */
+.ob-dots{display:flex;align-items:center;justify-content:center;gap:7px;margin-top:20px;}
+.ob-dot{width:7px;height:7px;border-radius:50%;background:rgba(0,0,0,0.12);transition:background 250ms,transform 250ms var(--ease-spring);}
+.ob-dot.active{background:var(--rose);transform:scale(1.3);}
