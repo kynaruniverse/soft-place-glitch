@@ -1,25 +1,22 @@
 /**
- * MAKÉ Service Worker
+ * MAKÉ Service Worker (V9)
  *
- * FIX: The cache name now includes a content hash generated at build time
- * (injected by build-hash.js — see scripts/build-hash.js).  This eliminates
- * the risk of forgetting to bump the version number after a deploy.
+ * Cache name includes a content hash generated at build time
+ * (injected by scripts/build-hash.js).
  *
- * For zero-build / file-server use, the hash falls back to a timestamp that
- * is fixed at SW registration time.  To bust the cache manually, just
- * re-deploy any changed file — the browser will detect the SW script has
- * changed and trigger install + activate automatically.
+ * For zero-build / file-server use the literal __BUILD_HASH__ string is
+ * kept — the SW script itself changing on each deploy is enough to bust
+ * the cache automatically.
  *
  * CACHE STRATEGY
  *   • On install  → pre-cache all known app shell assets.
  *   • On activate → delete all caches except the current one.
- *   • On fetch    → cache-first for same-origin resources;
- *                   network-only for cross-origin.
+ *   • On fetch    → cache-first for same-origin; network-only for cross-origin.
+ *
+ * V9: added all ui/ module paths to PRECACHE (they were missing because
+ * the ui/ directory didn't exist in V8 — those files are now present).
  */
 
-// __BUILD_HASH__ is replaced by scripts/build-hash.js if you use it.
-// Without that script the literal string is used, which is still fine —
-// the SW script itself changing on each deploy will trigger a cache bust.
 const BUILD_HASH = typeof __BUILD_HASH__ !== 'undefined' ? __BUILD_HASH__ : 'manual';
 const CACHE = `make-${BUILD_HASH}`;
 
@@ -30,21 +27,24 @@ const PRECACHE = [
   './manifest.json',
   './icons/icon-192.png',
   './icons/icon-512.png',
-  // App modules — add new files here when you add them.
+  // Core
   './app.js',
   './core/schema.js',
   './core/state.js',
   './core/storage.js',
+  // Utils
   './utils/helpers.js',
   './utils/rich-text.js',
   './utils/syntax.js',
   './utils/drag.js',
   './utils/resize.js',
+  // UI  ← V9: all five files now exist
   './ui/cards.js',
   './ui/stickies.js',
   './ui/note-editor.js',
   './ui/code-editor.js',
   './ui/modals.js',
+  // Features
   './features/ambient.js',
   './features/data.js',
   './features/drawer.js',
@@ -72,13 +72,16 @@ self.addEventListener('activate', e => {
   );
 });
 
-// ── Fetch: cache-first for same-origin, network-only for cross-origin ──
+// ── Fetch: cache-first same-origin, network-only cross-origin ─
 self.addEventListener('fetch', e => {
-  // Only handle GET requests.
   if (e.request.method !== 'GET') return;
 
-  // Skip cross-origin requests (analytics, CDN, etc.).
   const url = new URL(e.request.url);
+
+  // Always network-only for Google Favicons (need live icons)
+  if (url.hostname === 'www.google.com' && url.pathname.startsWith('/s2/favicons')) return;
+
+  // Skip other cross-origin requests
   if (url.origin !== self.location.origin) return;
 
   e.respondWith(
@@ -92,7 +95,11 @@ self.addEventListener('fetch', e => {
         }
         return res;
       }).catch(() =>
-        new Response('Offline', { status: 503, statusText: 'Service Unavailable' })
+        new Response('Offline — Maké is not cached yet. Load once while online.', {
+          status: 503,
+          statusText: 'Service Unavailable',
+          headers: { 'Content-Type': 'text/plain' },
+        })
       );
     })
   );
