@@ -1,3 +1,46 @@
+## V15 — Accessibility, UX & Performance improvements
+
+### Action & Input
+- **Save button guard**: Save buttons in note editor, code editor, and link modal are disabled with a loading spinner during async saves — prevents double-submission
+- **Long-press hint**: Cards and link buttons animate (`long-pressing` class) after 200ms touch hold to signal an action is registered
+- **Haptic feedback**: `navigator.vibrate(18)` fires when a long-press context menu triggers on supported devices
+- **Keyboard shortcuts**: Toolbar button titles updated with key hints (e.g. "Bold (Ctrl+B)")
+
+### Menus & Popups
+- **Focus trap**: All modal dialogs, settings page, and drawer now trap Tab/Shift+Tab focus within their bounds and restore focus to the triggering element on close
+- **Context menu auto-flip**: Menu auto-repositions to the opposite side when it would overflow the viewport — both horizontally and vertically
+- **Context menu arrow-nav**: Up/Down arrows move focus between menu items; Escape closes and restores focus
+- **Sticky colour picker**: Context menu for sticky notes includes an inline colour picker row — colour can now be changed after creation
+- **Save-as swipe-to-close**: Bottom sheet dismisses when swiped down more than 80px from the handle area
+- **Save-as focus trap**: Tab cycles within the sheet; Escape closes it
+
+### Navigation
+- **Title attributes**: Nav buttons have `title` attributes with labels and shortcuts (e.g. "Notes (⌘N)")
+- **Tab scroll persistence**: `scrollTop` is saved per tab in a `Map` and restored when switching back
+- **Arrow-key grid navigation**: When a card has focus, Left/Right/Up/Down arrow keys move focus to adjacent cards in the grid
+- **Add menu focus trap start**: Focus moves to the first add-menu item when the menu opens; Escape returns focus to the FAB
+
+### Content Display
+- **Live timestamps**: Card timestamps refresh every 60 seconds so "2h ago" stays accurate during long sessions
+- **CSS containment**: `contain: content` on `.card` and `contain: layout style` on `.sticky-layer` help the browser optimise painting
+
+### Input & Creation
+- **Note editor — word/char count**: Live word and character count shown in a footer bar below the editor
+- **Note editor — tag autocomplete**: Typing `#` shows a dropdown of existing tags; click to complete
+- **Note editor — scroll restore**: Scroll position saved per item ID and restored when re-opening the same note
+- **Code editor — find/replace (Ctrl+F)**: Inline search bar with match count, Prev/Next, Replace, Replace All
+- **Code editor — scroll restore**: Scroll position saved per item ID and restored on re-open
+
+### Feedback & Status
+- **Offline banner**: A persistent banner appears at the top of the screen when `navigator.onLine` is false; disappears when connectivity returns
+- **Backup status icon**: A small ☁️ icon appears briefly (2.8 s) after every successful auto-backup — unobtrusive, non-toast
+- **Storage usage warning**: Settings page shows a warning message when storage usage exceeds 80%
+
+### Cross-cutting
+- **Z-index system**: CSS variables `--z-context`, `--z-search`, `--z-toast`, `--z-drawer`, `--z-editor`, `--z-modal`, `--z-save-as`, `--z-onboard` replace magic numbers
+- **Focus-visible styles**: All interactive elements — buttons, toggles, cards, toolbar items, nav buttons, FAB — have `outline: 2px solid var(--rose)` on `:focus-visible`
+- **Drawer focus management**: Focus moves into the drawer on open and is restored to the burger button on close
+
 # Maké — Change Log
 
 ## V6  (this release)

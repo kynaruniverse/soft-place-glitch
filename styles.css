@@ -841,3 +841,428 @@ body{background:var(--sage);color:#fff;font-family:var(--font-body);font-size:14
   color:       rgba(255,255,255,0.18);
   font-family: var(--font-mono);
 }
+
+/* ================================================================
+   IMPROVEMENTS — V15
+   Accessibility, UX, and performance enhancements.
+   ================================================================ */
+
+/* ── Z-index system (consistent layering) ── */
+:root {
+  --z-context: 400;
+  --z-search:  500;
+  --z-toast:   600;
+  --z-drawer:  700;
+  --z-editor:  800;
+  --z-modal:   1000;
+  --z-save-as: 1500;
+  --z-onboard: 2000;
+}
+
+/* ── Focus-visible styles for all interactive elements ── */
+.toolbar-btn:focus-visible,
+.drawer-view-btn:focus-visible,
+.canvas-toolbar-btn:focus-visible,
+.nav-btn:focus-visible,
+.nav-btn-fab:focus-visible,
+.add-menu-item:focus-visible,
+.modal-btn:focus-visible,
+.editor-back-btn:focus-visible,
+.editor-save-btn:focus-visible,
+.card-fav:focus-visible,
+.sticky-delete:focus-visible,
+.settings-back-btn:focus-visible,
+.settings-action:focus-visible,
+.settings-seg-btn:focus-visible,
+.mini-toggle:focus-visible,
+.toggle-track:focus-visible,
+.context-menu-item:focus-visible,
+.save-as-option:focus-visible,
+.save-as-cancel:focus-visible,
+.lang-tag:focus-visible,
+.code-copy-btn:focus-visible,
+.search-filter-chip:focus-visible,
+.search-cancel-btn:focus-visible,
+.drawer-item:focus-visible,
+.ob-btn-primary:focus-visible,
+.ob-btn-ghost:focus-visible {
+  outline: 2px solid var(--rose);
+  outline-offset: 2px;
+}
+
+/* Remove default outline for mouse users */
+.toolbar-btn:focus:not(:focus-visible),
+.drawer-view-btn:focus:not(:focus-visible),
+.canvas-toolbar-btn:focus:not(:focus-visible),
+.nav-btn:focus:not(:focus-visible),
+.nav-btn-fab:focus:not(:focus-visible),
+.modal-btn:focus:not(:focus-visible),
+.editor-save-btn:focus:not(:focus-visible),
+.card:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Cards should be focusable for keyboard grid navigation */
+.card:focus-visible {
+  outline: 2px solid var(--rose);
+  outline-offset: 2px;
+  border-color: var(--rose-light);
+}
+
+/* ── Save button loading state ── */
+.editor-save-btn.loading {
+  opacity: 0.65;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+.editor-save-btn.loading::after {
+  content: '';
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border: 2px solid rgba(255,255,255,0.35);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+/* ── Long-press visual hint on cards ── */
+.card.long-pressing,
+.link-btn.long-pressing {
+  background: rgba(182,141,147,0.22);
+  border-color: rgba(182,141,147,0.45);
+  transition: background 300ms ease, border-color 300ms ease;
+}
+
+/* ── Offline banner ── */
+#offline-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2100;
+  background: rgba(50,30,20,0.92);
+  border-bottom: 1px solid rgba(255,160,50,0.40);
+  color: rgba(255,180,80,0.95);
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  animation: fade-in 300ms ease;
+  backdrop-filter: blur(8px);
+}
+#offline-banner svg {
+  width: 14px; height: 14px;
+  stroke: currentColor; fill: none;
+  stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+  flex-shrink: 0;
+}
+
+/* ── Skeleton loader cards ── */
+.card-skeleton {
+  background: var(--dark-card);
+  border: 1.5px solid rgba(255,255,255,0.07);
+  border-radius: var(--r-lg);
+  padding: 11px 11px 9px;
+  min-height: 170px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow: hidden;
+  position: relative;
+}
+.card-skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(255,255,255,0.04) 40%,
+    rgba(255,255,255,0.08) 50%,
+    rgba(255,255,255,0.04) 60%,
+    transparent 100%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.6s ease infinite;
+}
+@keyframes skeleton-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.sk-line {
+  height: 8px;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.09);
+}
+.sk-line:nth-child(1) { width: 65%; }
+.sk-line:nth-child(2) { width: 90%; }
+.sk-line:nth-child(3) { width: 78%; }
+.sk-line:nth-child(4) { width: 55%; margin-top: 4px; }
+
+/* ── Word count footer in note editor ── */
+.note-wordcount-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 18px 8px;
+  flex-shrink: 0;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+.note-wordcount {
+  font-size: 10px;
+  color: rgba(255,255,255,0.25);
+  font-family: var(--font-mono);
+}
+
+/* ── Tag autocomplete dropdown ── */
+.tag-autocomplete {
+  position: absolute;
+  left: 18px;
+  bottom: 100%;
+  background: var(--dark-modal);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: var(--r-md);
+  padding: 4px;
+  min-width: 160px;
+  max-width: 260px;
+  max-height: 160px;
+  overflow-y: auto;
+  z-index: 900;
+  box-shadow: var(--shadow-lg);
+  animation: popup-in 120ms var(--ease-spring) both;
+}
+.tag-autocomplete-item {
+  width: 100%;
+  padding: 8px 12px;
+  background: none;
+  border: none;
+  border-radius: var(--r-sm);
+  color: rgba(255,255,255,0.78);
+  font-size: 13px;
+  font-family: var(--font-body);
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 100ms;
+}
+.tag-autocomplete-item:hover,
+.tag-autocomplete-item:focus {
+  background: rgba(182,141,147,0.18);
+  color: white;
+  outline: none;
+}
+.tag-autocomplete-item::before {
+  content: '#';
+  color: var(--rose);
+  font-size: 11px;
+}
+
+/* ── Backup status indicator ── */
+#backup-status-icon {
+  position: fixed;
+  bottom: 82px;
+  right: 12px;
+  z-index: 300;
+  font-size: 14px;
+  opacity: 0;
+  transition: opacity 400ms ease;
+  pointer-events: none;
+}
+#backup-status-icon.show {
+  opacity: 1;
+}
+
+/* ── CSS Containment for performance ── */
+.card {
+  contain: content;
+}
+.sticky-layer {
+  contain: layout style;
+}
+
+/* ── Sticky note: keyboard focus ── */
+.sticky-note:focus-within {
+  box-shadow: var(--shadow-paper), 0 0 0 2px var(--rose), inset 0 -1px 0 rgba(0,0,0,0.06);
+}
+
+/* ── Sticky colour picker in context menu ── */
+.ctx-color-row {
+  display: flex;
+  gap: 8px;
+  padding: 8px 12px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  flex-wrap: wrap;
+}
+.ctx-color-dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 120ms var(--ease-spring), border-color 120ms;
+}
+.ctx-color-dot:hover,
+.ctx-color-dot:focus-visible {
+  transform: scale(1.18);
+  border-color: white;
+  outline: none;
+}
+
+/* ── Context menu: auto-flip when near edge (helper class) ── */
+.context-menu.flip-up {
+  transform-origin: bottom left;
+}
+
+/* ── Code editor: Find/Replace bar ── */
+.code-find-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  background: #111413;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+.code-find-bar.hidden { display: none; }
+.code-find-input,
+.code-replace-input {
+  flex: 1;
+  min-width: 100px;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: var(--r-sm);
+  padding: 5px 10px;
+  color: rgba(255,255,255,0.90);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  outline: none;
+  user-select: text;
+  -webkit-user-select: text;
+  transition: border-color var(--dur-fast);
+}
+.code-find-input:focus,
+.code-replace-input:focus { border-color: rgba(182,141,147,0.55); }
+.code-find-count {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: rgba(255,255,255,0.35);
+  flex-shrink: 0;
+  min-width: 50px;
+  text-align: center;
+}
+.code-find-btn {
+  width: 26px;
+  height: 26px;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: var(--r-sm);
+  color: rgba(255,255,255,0.65);
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background var(--dur-fast), color var(--dur-fast);
+}
+.code-find-btn:active { background: rgba(182,141,147,0.22); color: white; }
+.code-find-btn:focus-visible {
+  outline: 2px solid var(--rose);
+  outline-offset: 2px;
+}
+.code-find-close {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.38);
+  font-size: 13px;
+  cursor: pointer;
+  padding: 4px;
+  flex-shrink: 0;
+  transition: color var(--dur-fast);
+}
+.code-find-close:hover { color: rgba(255,255,255,0.75); }
+
+/* ── Code editor: Find/Replace bar ── */
+.code-find-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  background: #111413;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+.code-find-bar.hidden { display: none; }
+
+.code-find-input,
+.code-replace-input {
+  flex: 1;
+  min-width: 100px;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: var(--r-sm);
+  padding: 5px 10px;
+  color: white;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  outline: none;
+  user-select: text;
+  -webkit-user-select: text;
+}
+.code-find-input:focus,
+.code-replace-input:focus {
+  border-color: rgba(182,141,147,0.55);
+}
+.code-find-input::placeholder,
+.code-replace-input::placeholder {
+  color: rgba(255,255,255,0.28);
+}
+
+.code-find-count {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: rgba(255,255,255,0.38);
+  min-width: 56px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.code-find-btn {
+  width: 28px; height: 28px;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: var(--r-sm);
+  color: rgba(255,255,255,0.65);
+  font-size: 13px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: background var(--dur-fast), color var(--dur-fast);
+}
+.code-find-btn:hover  { background: rgba(182,141,147,0.20); color: white; }
+.code-find-btn:active { background: rgba(182,141,147,0.30); }
+.code-find-btn:focus-visible { outline: 2px solid var(--rose); outline-offset: 2px; }
+
+.code-find-close {
+  width: 24px; height: 24px;
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.38);
+  font-size: 12px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: var(--r-sm);
+  flex-shrink: 0;
+  transition: color var(--dur-fast);
+}
+.code-find-close:hover { color: white; }
+.code-find-close:focus-visible { outline: 2px solid var(--rose); outline-offset: 2px; }

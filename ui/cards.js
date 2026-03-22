@@ -102,6 +102,7 @@ export function renderCards() {
       el.className = 'card card-animate-in';
       el.dataset.id   = item.id;
       el.dataset.type = item.type;
+      el.tabIndex     = 0;
       el.style.animationDelay = `${i * 28}ms`;
     }
     el.dataset.type = item.type;
@@ -168,10 +169,15 @@ function _attachCardListeners() {
       pressTimer = setTimeout(async () => {
         const item = state.backgroundItems.find(i => i.id === +card.dataset.id);
         if (item) {
+          navigator.vibrate?.(18);
           const m = await getModals();
           m?.showContextMenu(e.touches[0], item);
         }
       }, 500);
+      // Visual long-press hint after 200ms
+      const hintTimer = setTimeout(() => card.classList.add('long-pressing'), 200);
+      card.addEventListener('touchend',  () => { clearTimeout(hintTimer); card.classList.remove('long-pressing'); }, { once: true });
+      card.addEventListener('touchmove', () => { clearTimeout(hintTimer); card.classList.remove('long-pressing'); }, { once: true });
     }, { passive: true });
     card.addEventListener('touchend',  () => clearTimeout(pressTimer));
     card.addEventListener('touchmove', () => clearTimeout(pressTimer));
@@ -206,10 +212,15 @@ function _attachLinkListeners() {
         e.preventDefault();
         const item = state.backgroundItems.find(i => i.id === +btn.dataset.id);
         if (item) {
+          navigator.vibrate?.(18);
           const m = await getModals();
           m?.showContextMenu(e.touches[0], item);
         }
       }, 500);
+      const hintTimer = setTimeout(() => btn.classList.add('long-pressing'), 200);
+      const clearHint = () => { clearTimeout(hintTimer); btn.classList.remove('long-pressing'); };
+      btn.addEventListener('touchend',  clearHint, { once: true });
+      btn.addEventListener('touchmove', clearHint, { once: true });
     }, { passive: true });
     btn.addEventListener('touchend',  () => clearTimeout(pressTimer));
     btn.addEventListener('touchmove', () => clearTimeout(pressTimer));

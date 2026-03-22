@@ -85,6 +85,34 @@ async function init() {
 
   initAmbient();
   _syncItemCount();
+  _initOfflineBanner();
+  _initLiveTimestamps();
+}
+
+// ── Offline detection ─────────────────────────────────────────
+function _initOfflineBanner() {
+  const show = () => {
+    if (document.getElementById('offline-banner')) return;
+    const banner = document.createElement('div');
+    banner.id = 'offline-banner';
+    banner.innerHTML = `<svg viewBox="0 0 24 24"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0119 12.55"/><path d="M5 12.55a10.94 10.94 0 015.17-2.39"/><path d="M10.71 5.05A16 16 0 0122.56 9"/><path d="M1.42 9a15.91 15.91 0 014.7-2.88"/><path d="M8.53 16.11a6 6 0 016.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>Offline — data is safe, changes save locally`;
+    document.body.prepend(banner);
+  };
+  const hide = () => document.getElementById('offline-banner')?.remove();
+
+  if (!navigator.onLine) show();
+  window.addEventListener('online',  hide);
+  window.addEventListener('offline', show);
+}
+
+// ── Live timestamp refresh (every 60s) ───────────────────────
+function _initLiveTimestamps() {
+  setInterval(() => {
+    // Only re-render if cards are visible and there are items
+    if (state.backgroundItems.length || state.stickyItems.length) {
+      renderCards();
+    }
+  }, 60_000);
 }
 
 // ── Theme ────────────────────────────────────────────────────
@@ -194,14 +222,14 @@ function _buildShell() {
 
     <nav class="bottom-nav" role="navigation" aria-label="Main navigation">
       <button class="nav-btn ${state.currentTab === 'links' ? 'active' : ''}"
-              data-tab="links" aria-label="Links"
+              data-tab="links" aria-label="Links" title="Links"
               aria-current="${state.currentTab === 'links' ? 'page' : 'false'}">
         <svg viewBox="0 0 24 24">
           <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/>
           <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
       </button>
       <button class="nav-btn ${state.currentTab === 'notes' ? 'active' : ''}"
-              data-tab="notes" aria-label="Notes"
+              data-tab="notes" aria-label="Notes" title="Notes (⌘N)"
               aria-current="${state.currentTab === 'notes' ? 'page' : 'false'}">
         <svg viewBox="0 0 24 24">
           <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
@@ -212,12 +240,12 @@ function _buildShell() {
           <line x1="5"  y1="12" x2="19" y2="12"/></svg>
       </button>
       <button class="nav-btn ${state.currentTab === 'code' ? 'active' : ''}"
-              data-tab="code" aria-label="Code"
+              data-tab="code" aria-label="Code" title="Code (⌘N)"
               aria-current="${state.currentTab === 'code' ? 'page' : 'false'}">
         <svg viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/>
           <polyline points="8 6 2 12 8 18"/></svg>
       </button>
-      <button class="nav-btn" id="settings-btn" aria-label="Settings">
+      <button class="nav-btn" id="settings-btn" aria-label="Settings" title="Settings">
         <svg viewBox="0 0 24 24">
           <circle cx="12" cy="12" r="3"/>
           <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
@@ -227,11 +255,40 @@ function _buildShell() {
 }
 
 // ── Listeners ─────────────────────────────────────────────────
+// Persist scroll position per tab
+const _scrollMap = new Map();
+
+function _saveScrollPos() {
+  const layer = document.getElementById('grid-layer');
+  if (layer) _scrollMap.set(state.currentTab, layer.scrollTop);
+}
+
+function _restoreScrollPos() {
+  const layer = document.getElementById('grid-layer');
+  if (layer) layer.scrollTop = _scrollMap.get(state.currentTab) || 0;
+}
+
 function _attachShellListeners() {
   app.addEventListener('click', e => {
     const tab = e.target.closest('.nav-btn[data-tab]');
-    if (tab) { state.currentTab = tab.dataset.tab; return; }
-    if (e.target.closest('#fab')) { state.showAddMenu = !state.showAddMenu; return; }
+    if (tab) {
+      _saveScrollPos();
+      state.currentTab = tab.dataset.tab;
+      requestAnimationFrame(_restoreScrollPos);
+      return;
+    }
+    if (e.target.closest('#fab')) {
+      const wasOpen = state.showAddMenu;
+      state.showAddMenu = !wasOpen;
+      if (!wasOpen) {
+        // Move focus to first menu item (focus trap)
+        requestAnimationFrame(() => {
+          const first = document.querySelector('.add-menu-item');
+          first?.focus();
+        });
+      }
+      return;
+    }
     if (state.showAddMenu && !e.target.closest('#add-menu') && !e.target.closest('#fab')) {
       state.showAddMenu = false;
     }
@@ -289,7 +346,32 @@ function _attachGlobalShortcuts() {
       else if (state.currentTab === 'links') showLinkModal();
       return;
     }
-    if (e.key === 'Escape' && state.showAddMenu) state.showAddMenu = false;
+    if (e.key === 'Escape' && state.showAddMenu) {
+      state.showAddMenu = false;
+      document.getElementById('fab')?.focus();
+      return;
+    }
+
+    // ── Arrow-key grid navigation ─────────────────────────────
+    const focused = document.activeElement;
+    const card = focused?.closest('.card[data-id]');
+    if (card && (e.key === 'ArrowRight' || e.key === 'ArrowLeft' || e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+      e.preventDefault();
+      const grid = document.getElementById('grid-container');
+      if (!grid) return;
+      const cards = [...grid.querySelectorAll('.card[data-id]')];
+      if (!cards.length) return;
+      const idx = cards.indexOf(card);
+      // Determine columns from grid layout
+      const cols = Math.round(grid.clientWidth / (cards[0].offsetWidth + 10)) || 3;
+      let next = -1;
+      if (e.key === 'ArrowRight') next = idx + 1;
+      if (e.key === 'ArrowLeft')  next = idx - 1;
+      if (e.key === 'ArrowDown')  next = idx + cols;
+      if (e.key === 'ArrowUp')    next = idx - cols;
+      if (next >= 0 && next < cards.length) cards[next].focus();
+      return;
+    }
   });
 }
 

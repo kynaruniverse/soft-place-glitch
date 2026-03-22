@@ -1,10 +1,12 @@
 /**
- * MAKÉ UI — note-editor.js
- * Full-screen rich-text note editor.
+ * MAKÉ UI — note-editor.js (V15)
  *
- * Changes:
- * - All execCommand calls routed through utils/rich-text.js (isolated for future swap).
- * - FIX: live tag preview — #tag chips update as you type, not only at save time.
+ * V15 improvements:
+ * - Save button disabled with spinner during async save (no double-save)
+ * - Word/character count footer (live update)
+ * - Tag autocomplete: typing # suggests existing tags from all items
+ * - Scroll position restored per item ID on re-open
+ * - focus-visible already handled by global CSS
  */
 
 import { state, upsertItemInState } from '../core/state.js';
@@ -14,6 +16,9 @@ import { esc, parseTags, showToast } from '../utils/helpers.js';
 import { execFormat, queryFormat }   from '../utils/rich-text.js';
 
 const NOTE_COLORS = ['#ffffff','#ff6b6b','#ffd93d','#6bcb77','#4d96ff','#c77dff','#ff9f40','#00d2d3'];
+
+// Persist scroll position per item id across open/close
+const _scrollPositions = new Map();
 
 export function showNoteEditor(existingItem = null) {
   document.getElementById('note-editor-page')?.remove();
@@ -30,7 +35,7 @@ export function showNoteEditor(existingItem = null) {
 
   page.innerHTML = `
     <div class="editor-topbar">
-      <button class="editor-back-btn" id="note-back">
+      <button class="editor-back-btn" id="note-back" aria-label="Back">
         <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
       </button>
       <span class="editor-topbar-title">${existingItem ? 'Edit Note' : 'New Note'}</span>
@@ -42,10 +47,10 @@ export function showNoteEditor(existingItem = null) {
 
     <div class="editor-toolbar" id="note-toolbar">
       <div class="toolbar-group">
-        <button class="toolbar-btn" data-cmd="bold"          title="Bold"><b>B</b></button>
-        <button class="toolbar-btn" data-cmd="italic"        title="Italic"><i>I</i></button>
-        <button class="toolbar-btn" data-cmd="underline"     title="Underline"><u>U</u></button>
-        <button class="toolbar-btn" data-cmd="strikeThrough" title="Strike"><s>S</s></button>
+        <button class="toolbar-btn" data-cmd="bold"          title="Bold (Ctrl+B)"><b>B</b></button>
+        <button class="toolbar-btn" data-cmd="italic"        title="Italic (Ctrl+I)"><i>I</i></button>
+        <button class="toolbar-btn" data-cmd="underline"     title="Underline (Ctrl+U)"><u>U</u></button>
+        <button class="toolbar-btn" data-cmd="strikeThrough" title="Strikethrough"><s>S</s></button>
       </div>
       <div class="toolbar-sep"></div>
       <div class="toolbar-group">
@@ -84,22 +89,27 @@ export function showNoteEditor(existingItem = null) {
       </div>
     </div>
 
-    <div class="editor-body" id="note-body" contenteditable="true" spellcheck="true">${bodyHtml}</div>
+    <div class="editor-body" id="note-body" contenteditable="true" spellcheck="true"
+         data-placeholder="Start writing…">${bodyHtml}</div>
 
-    <!-- FIX: live tag preview -->
+    <!-- Live tag preview -->
     <div class="editor-tag-preview" id="note-tag-preview" aria-live="polite"></div>
+
+    <!-- Word/char count footer -->
+    <div class="note-wordcount-bar">
+      <span class="note-wordcount" id="note-wordcount">0 words · 0 chars</span>
+    </div>
   `;
 
   document.body.appendChild(page);
   requestAnimationFrame(() => page.classList.add('open'));
 
-  const body    = page.querySelector('#note-body');
-  const toolbar = page.querySelector('#note-toolbar');
-  const tagPrev = page.querySelector('#note-tag-preview');
+  const body      = page.querySelector('#note-body');
+  const toolbar   = page.querySelector('#note-toolbar');
+  const tagPrev   = page.querySelector('#note-tag-preview');
+  const wordcount = page.querySelector('#note-wordcount');
 
   // ── Toolbar ──────────────────────────────────────────────────
-
-  // mousedown keeps focus inside the editor.
   toolbar.addEventListener('mousedown', e => {
     const btn = e.target.closest('[data-cmd]');
     if (!btn) return;
@@ -108,7 +118,6 @@ export function showNoteEditor(existingItem = null) {
     _updateToolbarState(toolbar);
   });
 
-  // Touch support.
   toolbar.addEventListener('touchend', e => {
     const btn = e.target.closest('[data-cmd]');
     if (!btn) return;
@@ -121,22 +130,39 @@ export function showNoteEditor(existingItem = null) {
   body.addEventListener('keyup',   () => _updateToolbarState(toolbar));
   body.addEventListener('mouseup', () => _updateToolbarState(toolbar));
 
-  // ── Live tag preview ─────────────────────────────────────────
-  // FIX: parseTags runs on every input keystroke, updating the preview
-  // immediately instead of waiting until Save.
-
-  body.addEventListener('input', () => {
-    _renderTagPreview(tagPrev, body.innerText || '');
-  });
-
-  // Render initial preview for existing notes.
-  if (existingItem?.tags?.length) {
-    _renderTagPreview(tagPrev, body.innerText || '');
+  // ── Word/char count ──────────────────────────────────────────
+  function _updateWordCount() {
+    const plain = body.innerText || '';
+    const chars = plain.length;
+    const words = plain.trim() ? plain.trim().split(/\s+/).length : 0;
+    wordcount.textContent = `${words} word${words !== 1 ? 's' : ''} · ${chars} char${chars !== 1 ? 's' : ''}`;
   }
 
-  // ── Save / Close ─────────────────────────────────────────────
+  // ── Live tag preview + autocomplete ─────────────────────────
+  let _acTimeout;
+  body.addEventListener('input', () => {
+    _renderTagPreview(tagPrev, body.innerText || '');
+    _updateWordCount();
+    clearTimeout(_acTimeout);
+    _acTimeout = setTimeout(() => _handleTagAutocomplete(body, page), 80);
+  });
 
+  body.addEventListener('keydown', e => {
+    // Close autocomplete on Escape
+    if (e.key === 'Escape') {
+      page.querySelector('.tag-autocomplete')?.remove();
+    }
+  });
+
+  // Initial render
+  if (existingItem?.tags?.length) _renderTagPreview(tagPrev, body.innerText || '');
+  _updateWordCount();
+
+  // ── Save / Close ─────────────────────────────────────────────
   const close = () => {
+    // Save scroll position
+    if (existingItem?.id) _scrollPositions.set(existingItem.id, body.scrollTop);
+    page.querySelector('.tag-autocomplete')?.remove();
     page.classList.remove('open');
     setTimeout(() => page.remove(), 320);
   };
@@ -144,26 +170,48 @@ export function showNoteEditor(existingItem = null) {
   page.querySelector('#note-back').addEventListener('click', close);
 
   page.querySelector('#note-save').addEventListener('click', async () => {
+    const saveBtn = page.querySelector('#note-save');
+    if (saveBtn.classList.contains('loading')) return;
+
     const title   = page.querySelector('#note-title').value.trim();
     const content = body.innerHTML;
     const plain   = body.innerText || '';
     if (!title && !plain.trim()) { close(); return; }
 
+    // Disable button with spinner
+    saveBtn.classList.add('loading');
+    saveBtn.textContent = '';
+
     const tags = parseTags(plain);
     let saved;
-    if (existingItem) {
-      saved = await saveItem({ ...existingItem, title, content, tags });
-    } else {
-      saved = await saveItem(createItem({
-        layer: ItemLayer.BACKGROUND, type: ItemType.NOTE, title, content, tags,
-      }));
+    try {
+      if (existingItem) {
+        saved = await saveItem({ ...existingItem, title, content, tags });
+      } else {
+        saved = await saveItem(createItem({
+          layer: ItemLayer.BACKGROUND, type: ItemType.NOTE, title, content, tags,
+        }));
+      }
+      upsertItemInState(saved);
+      window._makeAutoBackup?.();
+      showToast(existingItem ? 'Note updated' : 'Note saved');
+      close();
+    } catch (err) {
+      console.error('[Maké] save note failed', err);
+      showToast('Save failed — please try again', true);
+      saveBtn.classList.remove('loading');
+      saveBtn.textContent = 'Save';
     }
-    upsertItemInState(saved);
-    showToast(existingItem ? 'Note updated' : 'Note saved');
-    close();
   });
 
-  setTimeout(() => { body.focus(); _placeCaretAtEnd(body); }, 380);
+  setTimeout(() => {
+    body.focus();
+    _placeCaretAtEnd(body);
+    // Restore scroll position
+    if (existingItem?.id && _scrollPositions.has(existingItem.id)) {
+      body.scrollTop = _scrollPositions.get(existingItem.id);
+    }
+  }, 380);
 }
 
 // ── Helpers ───────────────────────────────────────────────────
@@ -179,13 +227,73 @@ function _updateToolbarState(toolbar) {
 
 function _renderTagPreview(container, plainText) {
   const tags = parseTags(plainText);
-  if (!tags.length) {
-    container.innerHTML = '';
-    return;
-  }
+  if (!tags.length) { container.innerHTML = ''; return; }
   container.innerHTML = tags
     .map(t => `<span class="tag-chip tag-chip--live">#${esc(t)}</span>`)
     .join('');
+}
+
+/** Tag autocomplete: when cursor is right after a #word, suggest existing tags. */
+function _handleTagAutocomplete(body, page) {
+  page.querySelector('.tag-autocomplete')?.remove();
+
+  const sel = window.getSelection();
+  if (!sel?.rangeCount) return;
+
+  // Get text before cursor in current node
+  const range    = sel.getRangeAt(0);
+  const textNode = range.startContainer;
+  if (textNode.nodeType !== Node.TEXT_NODE) return;
+
+  const textBefore = textNode.textContent.slice(0, range.startOffset);
+  const hashMatch  = textBefore.match(/#([\w]*)$/);
+  if (!hashMatch) return;
+
+  const partial = hashMatch[1].toLowerCase();
+
+  // Collect all existing tags from state
+  const allTags = new Set();
+  [...state.backgroundItems, ...state.stickyItems].forEach(item => {
+    (item.tags || []).forEach(t => allTags.add(t));
+  });
+
+  const matches = [...allTags]
+    .filter(t => t.startsWith(partial) && t !== partial)
+    .slice(0, 8);
+
+  if (!matches.length) return;
+
+  const ac = document.createElement('div');
+  ac.className = 'tag-autocomplete';
+  ac.setAttribute('role', 'listbox');
+  ac.setAttribute('aria-label', 'Tag suggestions');
+
+  matches.forEach(tag => {
+    const btn = document.createElement('button');
+    btn.className = 'tag-autocomplete-item';
+    btn.setAttribute('role', 'option');
+    btn.textContent = tag;
+    btn.addEventListener('mousedown', e => {
+      e.preventDefault();
+      // Replace partial with full tag
+      const newText = textBefore.replace(/#[\w]*$/, `#${tag} `);
+      textNode.textContent = newText + textNode.textContent.slice(range.startOffset);
+      // Move caret to after inserted tag
+      const newRange = document.createRange();
+      newRange.setStart(textNode, newText.length);
+      newRange.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(newRange);
+      ac.remove();
+      body.dispatchEvent(new Event('input'));
+    });
+    ac.appendChild(btn);
+  });
+
+  // Position relative to the editor body
+  const bodyRect = body.getBoundingClientRect();
+  const wc = page.querySelector('.note-wordcount-bar');
+  page.querySelector('.editor-tag-preview').insertAdjacentElement('beforebegin', ac);
 }
 
 function _placeCaretAtEnd(el) {

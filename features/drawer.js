@@ -1,15 +1,10 @@
 /**
- * MAKÉ FEATURES — drawer.js (V3)
- * Slide-in left-side drawer.
+ * MAKÉ FEATURES — drawer.js (V15)
  *
- * V3 additions:
- *   - View mode (Grid / List) toggle synced with state.viewMode
- *   - Keyboard: Escape closes the drawer
- *   - Focus trap: Tab cycles within the drawer
- *
- * V2 fix (retained):
- *   The favourites toggle uses state.filterFavourites (proper setter)
- *   instead of mutating state._data directly — value is persisted.
+ * V15 improvements:
+ *   – Focus management: focus moves to first item on open, restored on close
+ *   – Full focus trap: Tab/Shift+Tab cycle within drawer
+ *   – Escape closes and restores focus to burger button
  */
 
 import { state }                     from '../core/state.js';
@@ -17,6 +12,8 @@ import { startAmbient, stopAmbient } from './ambient.js';
 
 export function showDrawer() {
   if (document.getElementById('drawer')) return;
+
+  const prevFocus = document.activeElement;
 
   const overlay = document.createElement('div');
   overlay.className = 'drawer-overlay';
@@ -62,7 +59,7 @@ export function showDrawer() {
       <div class="drawer-divider"></div>
       <div class="drawer-section-label">View</div>
 
-      <div class="drawer-view-row">
+      <div class="drawer-view-row" role="group" aria-label="View mode">
         <button class="drawer-view-btn ${state.viewMode === 'grid' ? 'active' : ''}"
                 data-view="grid" aria-pressed="${state.viewMode === 'grid'}">
           <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
@@ -115,11 +112,31 @@ export function showDrawer() {
   document.body.appendChild(overlay);
   document.body.appendChild(drawer);
 
+  // Move focus into drawer
+  setTimeout(() => drawer.querySelector('button')?.focus(), 300);
+
+  // ── Focus trap ────────────────────────────────────────────────
+  const SEL = 'button:not([disabled]),[tabindex]:not([tabindex="-1"])';
+  const trapKey = e => {
+    if (e.key !== 'Tab') return;
+    const els = [...drawer.querySelectorAll(SEL)];
+    if (!els.length) { e.preventDefault(); return; }
+    const first = els[0], last = els[els.length - 1];
+    if (e.shiftKey) { if (document.activeElement === first) { e.preventDefault(); last.focus(); } }
+    else            { if (document.activeElement === last)  { e.preventDefault(); first.focus(); } }
+  };
+  drawer.addEventListener('keydown', trapKey);
+
   const close = () => {
+    drawer.removeEventListener('keydown', trapKey);
     drawer.classList.remove('opening');
     drawer.classList.add('closing');
     overlay.style.animation = 'fade-in 200ms ease reverse both';
-    setTimeout(() => { drawer.remove(); overlay.remove(); }, 260);
+    setTimeout(() => {
+      drawer.remove();
+      overlay.remove();
+      prevFocus?.focus();
+    }, 260);
   };
 
   overlay.addEventListener('click', close);
@@ -140,7 +157,6 @@ export function showDrawer() {
   });
 
   // ── Favourites toggle ─────────────────────────────────────────
-  // FIX: use state.filterFavourites setter so value is persisted
   document.getElementById('fav-toggle').addEventListener('click', e => {
     e.stopPropagation();
     state.filterFavourites = !state.filterFavourites;
@@ -148,7 +164,7 @@ export function showDrawer() {
     e.currentTarget.setAttribute('aria-pressed', state.filterFavourites);
   });
 
-  // ── View mode toggle (V3 new) ─────────────────────────────────
+  // ── View mode ─────────────────────────────────────────────────
   drawer.querySelectorAll('[data-view]').forEach(btn => {
     btn.addEventListener('click', () => {
       state.viewMode = btn.dataset.view;
@@ -172,7 +188,6 @@ export function showDrawer() {
   document.getElementById('drawer-sort').addEventListener('click', () => {
     close();
     setTimeout(async () => {
-      // Burger is now in the canvas-toolbar; anchor menu below it
       const burgerEl = document.getElementById('burger-btn') || document.getElementById('canvas-toolbar') || document.body;
       const r = burgerEl.getBoundingClientRect();
       const { showSortMenuAt } = await import('./sort-menu.js');
@@ -183,18 +198,11 @@ export function showDrawer() {
   // ── Export / Import ───────────────────────────────────────────
   document.getElementById('drawer-export').addEventListener('click', () => {
     close();
-    setTimeout(async () => {
-      const { exportData } = await import('./data.js');
-      exportData();
-    }, 300);
+    setTimeout(async () => { const { exportData } = await import('./data.js'); exportData(); }, 300);
   });
-
   document.getElementById('drawer-import').addEventListener('click', () => {
     close();
-    setTimeout(async () => {
-      const { importData } = await import('./data.js');
-      importData();
-    }, 300);
+    setTimeout(async () => { const { importData } = await import('./data.js'); importData(); }, 300);
   });
 }
 

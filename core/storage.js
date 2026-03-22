@@ -318,6 +318,9 @@ export async function writeBackupFile(allItems, forceNewFile = true) {
     const writable = await handle.createWritable();
     await writable.write(JSON.stringify(allItems, null, 2));
     await writable.close();
+
+    // Show subtle backup confirmation
+    _showBackupIndicator();
     return true;
   } catch (err) {
     if (err.name === 'AbortError') return false; // User cancelled — fine
@@ -390,4 +393,26 @@ async function _deserialiseHandle(stored) {
     }
   } catch { /* ignore */ }
   return null; // Always return null — reuse not yet widely available
+}
+
+// ── Backup status indicator ───────────────────────────────────
+
+/**
+ * _showBackupIndicator()
+ * Shows a small floating icon briefly after a successful auto-backup.
+ * Unobtrusive — does not use a toast to avoid distraction on every save.
+ */
+function _showBackupIndicator() {
+  // For manual export (forceNewFile=true) a toast is shown by data.js instead
+  let el = document.getElementById('backup-status-icon');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'backup-status-icon';
+    el.title = 'Auto-backup saved';
+    el.textContent = '☁️';
+    document.body.appendChild(el);
+  }
+  el.classList.add('show');
+  clearTimeout(el._hideTimer);
+  el._hideTimer = setTimeout(() => el.classList.remove('show'), 2800);
 }
